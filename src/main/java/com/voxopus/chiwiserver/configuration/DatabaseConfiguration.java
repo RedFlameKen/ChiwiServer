@@ -1,7 +1,6 @@
 package com.voxopus.chiwiserver.configuration;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -12,8 +11,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.voxopus.chiwiserver.util.JsonUtil;
 
 import lombok.Getter;
 
@@ -27,20 +25,6 @@ public class DatabaseConfiguration {
 
     private static final String URL = "jdbc:mysql://localhost:3306/chiwi_db";
 
-    private String getConfig(File configFile, String key){
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            String value;
-            JsonNode node = mapper.readTree(configFile);
-            value = node.get(key).asText();
-            mapper.clearCaches();
-            return value;
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
     @Bean
     @Primary
     public DataSource getDataSource(){
@@ -52,8 +36,8 @@ public class DatabaseConfiguration {
             return null;
         }
 
-        String username = getConfig(configFile, "username");
-        String password = getConfig(configFile, "password");
+        String username = JsonUtil.getValue(configFile, "username");
+        String password = JsonUtil.getValue(configFile, "password");
 
         if(username == null || password == null){
             Logger.getLogger(this.getClass().getName())

@@ -1,4 +1,4 @@
-package com.voxopus.chiwiserver.service;
+package com.voxopus.chiwiserver.service.reviewer;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

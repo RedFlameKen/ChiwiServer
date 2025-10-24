@@ -1,4 +1,4 @@
-package com.voxopus.chiwiserver.controller;
+package com.voxopus.chiwiserver.controller.reviewer;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.voxopus.chiwiserver.model.reviewer.Reviewer;
-import com.voxopus.chiwiserver.service.ReviewerService;
+import com.voxopus.chiwiserver.service.reviewer.ReviewerService;
 
 @RestController
 @RequestMapping("/review")
