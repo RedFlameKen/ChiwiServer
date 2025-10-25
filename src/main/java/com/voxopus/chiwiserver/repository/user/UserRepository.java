@@ -8,6 +8,6 @@ import com.voxopus.chiwiserver.model.user.User;
 
 public interface UserRepository extends JpaRepository<User, Long>{
 
-    List<User> findByNameContainingIgnoreCase(String keyword);
+    List<User> findByUsernameContainingIgnoreCase(String keyword);
 
 }
