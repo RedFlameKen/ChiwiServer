@@ -6,7 +6,6 @@ import java.util.List;
 import com.voxopus.chiwiserver.model.user.User;
 
 import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -14,7 +13,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -25,23 +27,23 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
-@Entity
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
+@Entity
 @Builder
-@Table(name = "reviewer")
+@Table(name = "reviewers")
 public class Reviewer {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
     private Long id;
 
-    @Column(name = "name")
     private String name;
 
+    @Temporal(TemporalType.TIMESTAMP)
     private Date date_created;
 
+    @Temporal(TemporalType.TIMESTAMP)
     private Date date_modified;
 
     @ManyToOne
@@ -50,9 +52,8 @@ public class Reviewer {
 
     @OneToMany(mappedBy = "reviewer", cascade = CascadeType.ALL)
     private List<Flashcard> flashcards;
-    
-    public Reviewer(String name){
-        this.name = name;
-    }
 
+    @OneToOne(mappedBy = "reviewer")
+    private ReviewSession reviewSession;
+    
 }
