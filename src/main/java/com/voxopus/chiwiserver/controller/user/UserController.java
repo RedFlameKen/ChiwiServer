@@ -9,7 +9,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.voxopus.chiwiserver.request.user.UserRequestData;
 import com.voxopus.chiwiserver.response.ResponseData;
-import com.voxopus.chiwiserver.response.user.CreateUserResponseData;
+import com.voxopus.chiwiserver.response.user.UserCreatedResponseData;
+import com.voxopus.chiwiserver.response.user.UserLoginResponseData;
 import com.voxopus.chiwiserver.service.user.UserService;
 import com.voxopus.chiwiserver.util.Checker;
 
@@ -21,7 +22,7 @@ public class UserController {
 
     @PostMapping("/signup")
     public ResponseEntity<?> signup(@RequestBody UserRequestData body){
-        Checker<CreateUserResponseData> checker = userService.createUser(
+        Checker<UserCreatedResponseData> checker = userService.createUser(
                 body.getUsername(), 
                 body.getPassword(), 
                 body.getSalt_iv());
@@ -30,29 +31,43 @@ public class UserController {
         ResponseData<?> response;
 
         if(!checker.isOk()){
-            String message;
-            if(checker.getException() != null){
+            if(checker.getException() != null)
                 status = HttpStatus.INTERNAL_SERVER_ERROR;
-                message = checker.getException().getMessage();
-            } else {
+            else
                 status = HttpStatus.CONFLICT;
-                message = "username is unavailable";
-            }
-            response = ResponseData.builder()
-                .statusCode(status.value())
-                .message(message)
-                .build();
+        } else 
+            status = HttpStatus.OK;
 
-            return new ResponseEntity<>(response, status);
-        }
-
-        status = HttpStatus.OK;
         response = ResponseData.builder()
             .statusCode(status.value())
-            .message("successfully registered the account")
+            .message(checker.getMessage())
+            .data(checker.get())
             .build();
 
         return new ResponseEntity<>(response, status);
     }
 
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody UserRequestData userRequestData){
+        HttpStatus status;
+        ResponseData<?> response;
+
+        Checker<UserLoginResponseData> checker = userService.login(userRequestData);
+
+        if(!checker.isOk()){
+            if(checker.getException() != null)
+                status = HttpStatus.INTERNAL_SERVER_ERROR;
+            else
+                status = HttpStatus.UNAUTHORIZED;
+        } else
+            status = HttpStatus.OK;
+
+        response = ResponseData.builder()
+            .statusCode(status.value())
+            .message(checker.getMessage())
+            .data(checker.get())
+            .build();
+
+        return new ResponseEntity<>(response, status);
+    }
 }

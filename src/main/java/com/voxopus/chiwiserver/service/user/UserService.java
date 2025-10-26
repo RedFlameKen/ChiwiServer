@@ -1,6 +1,7 @@
 package com.voxopus.chiwiserver.service.user;
 
 import java.util.Date;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -10,7 +11,9 @@ import com.voxopus.chiwiserver.encryption.EncryptionFactory;
 import com.voxopus.chiwiserver.encryption.Hasher;
 import com.voxopus.chiwiserver.model.user.User;
 import com.voxopus.chiwiserver.repository.user.UserRepository;
-import com.voxopus.chiwiserver.response.user.CreateUserResponseData;
+import com.voxopus.chiwiserver.request.user.UserRequestData;
+import com.voxopus.chiwiserver.response.user.UserCreatedResponseData;
+import com.voxopus.chiwiserver.response.user.UserLoginResponseData;
 import com.voxopus.chiwiserver.util.Checker;
 
 @Service
@@ -20,7 +23,7 @@ public class UserService {
     private UserRepository userRepository;
 
 
-    public Checker<CreateUserResponseData> createUser(String username, String password, String saltIv){
+    public Checker<UserCreatedResponseData> createUser(String username, String password, String saltIv){
         if(usernameUsed(username)){
             return Checker.fail("username is unnavailable");
         }
@@ -38,7 +41,7 @@ public class UserService {
 
         } catch (Exception e) {
             e.printStackTrace();
-            return Checker.fail(e);
+            return Checker.fail(e, "an error occured");
         }
 
         Date dateCreated = new Date();
@@ -50,9 +53,46 @@ public class UserService {
             .build();
         userRepository.save(user);
 
-        return new Checker<>(CreateUserResponseData.builder()
+        return Checker.ok("successfully registered the account",
+                UserCreatedResponseData.builder()
                 .username(username)
                 .dateCreated(dateCreated)
+                .build());
+    }
+
+    public Checker<UserLoginResponseData> login(UserRequestData data){
+        String username = data.getUsername();
+        String password = data.getPassword();
+        String saltIv = data.getSalt_iv();
+
+        Optional<User> user = userRepository.findByUsername(username);
+
+        if(!user.isPresent()){
+            return Checker.fail("user does not exist");
+        }
+
+        String hashedPassword;
+        try {
+            Decryptor decryptor = EncryptionFactory.INSTANCE.getDecryptor(saltIv);
+            String decryptedPassword = decryptor.decrypt(password);
+
+            Hasher hasher = new Hasher();
+            hashedPassword = hasher.hash(decryptedPassword);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Checker.fail(e, "an error occured");
+        }
+
+        String userPassword = user.get().getPassword();
+
+        if(!hashedPassword.equals(userPassword)){
+            return Checker.fail("login failed");
+        }
+
+        return Checker.ok("successfully logged in",
+                UserLoginResponseData.builder()
+                .username(data.getUsername())
+                .dateLoggedIn(new Date())
                 .build());
     }
 
