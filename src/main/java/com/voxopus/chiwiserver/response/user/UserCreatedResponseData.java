@@ -7,7 +7,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class CreateUserResponseData {
+public class UserCreatedResponseData {
 
     String username;
     Date dateCreated;
