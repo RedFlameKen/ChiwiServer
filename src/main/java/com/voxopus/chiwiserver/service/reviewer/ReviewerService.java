@@ -1,5 +1,6 @@
 package com.voxopus.chiwiserver.service.reviewer;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -14,6 +15,7 @@ import com.voxopus.chiwiserver.repository.reviewer.ReviewSessionRepository;
 import com.voxopus.chiwiserver.repository.reviewer.ReviewerRepository;
 import com.voxopus.chiwiserver.repository.user.UserRepository;
 import com.voxopus.chiwiserver.request.reviewer.CreateReviewerRequestData;
+import com.voxopus.chiwiserver.response.reviewer.ListReviewersResponseData;
 import com.voxopus.chiwiserver.response.reviewer.ReviewerResponseData;
 import com.voxopus.chiwiserver.util.Checker;
 
@@ -54,8 +56,24 @@ public class ReviewerService {
                 .build());
     }
 
-    public List<Reviewer> getReviewersByUserId(Long userId){
-        return reviewerRepository.findByUserId(userId);
+    public Checker<List<ListReviewersResponseData>> getReviewersByUserId(Long userId){
+        Optional<User> user = userRepository.findById(userId);
+
+        if(!user.isPresent()){
+            return Checker.fail("no user with the given id was found");
+        }
+
+        List<Reviewer> reviewers = reviewerRepository.findByUserId(userId);
+        ArrayList<ListReviewersResponseData> responseData = new ArrayList<>();
+        reviewers.forEach(reviewer -> {
+            responseData.add(ListReviewersResponseData.builder()
+                    .id(reviewer.getId())
+                    .name(reviewer.getName())
+                    .flashcards_count(reviewer.getFlashcards().size())
+                    .build());
+        });
+
+        return Checker.ok("successfully listed reviewers", responseData);
     }
 
     public Checker<ReviewSession> startSession(Long userId, Long reviewerId){
