@@ -23,7 +23,11 @@ public class UserService {
     private UserRepository userRepository;
 
 
-    public Checker<UserCreatedResponseData> createUser(String username, String password, String saltIv){
+    public Checker<UserCreatedResponseData> createUser(UserRequestData data){
+        String username = data.getUsername();
+        String password = data.getPassword();
+        String saltIv = data.getSalt_iv();
+
         if(usernameUsed(username)){
             return Checker.fail("username is unnavailable");
         }

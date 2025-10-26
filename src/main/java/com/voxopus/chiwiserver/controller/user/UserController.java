@@ -22,10 +22,7 @@ public class UserController {
 
     @PostMapping("/signup")
     public ResponseEntity<?> signup(@RequestBody UserRequestData body){
-        Checker<UserCreatedResponseData> checker = userService.createUser(
-                body.getUsername(), 
-                body.getPassword(), 
-                body.getSalt_iv());
+        Checker<UserCreatedResponseData> checker = userService.createUser(body);
 
         HttpStatus status;
         ResponseData<?> response;
@@ -70,4 +67,5 @@ public class UserController {
 
         return new ResponseEntity<>(response, status);
     }
+
 }
