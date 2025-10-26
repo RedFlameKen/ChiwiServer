@@ -7,7 +7,7 @@ import lombok.Data;
 @Builder
 public class ResponseData<T> {
 
-    int statusCode;
+    int status_code;
     String message;
     T data;
     

@@ -31,7 +31,7 @@ public class ReviewerController {
         status = checker.isOk() ? HttpStatus.OK : HttpStatus.NOT_FOUND;
 
         response = ResponseData.builder()
-            .statusCode(status.value())
+            .status_code(status.value())
             .message(checker.getMessage())
             .data(checker.get())
             .build();
@@ -49,7 +49,7 @@ public class ReviewerController {
         status = checker.isOk() ? HttpStatus.OK : HttpStatus.NOT_FOUND;
 
         response = ResponseData.builder()
-            .statusCode(status.value())
+            .status_code(status.value())
             .message(checker.getMessage())
             .data(checker.get())
             .build();

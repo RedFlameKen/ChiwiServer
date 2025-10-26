@@ -36,7 +36,7 @@ public class UserController {
             status = HttpStatus.OK;
 
         response = ResponseData.builder()
-            .statusCode(status.value())
+            .status_code(status.value())
             .message(checker.getMessage())
             .data(checker.get())
             .build();
@@ -60,7 +60,7 @@ public class UserController {
             status = HttpStatus.OK;
 
         response = ResponseData.builder()
-            .statusCode(status.value())
+            .status_code(status.value())
             .message(checker.getMessage())
             .data(checker.get())
             .build();
