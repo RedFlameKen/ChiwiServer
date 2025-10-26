@@ -80,7 +80,7 @@ public class UserService {
             Decryptor decryptor = EncryptionFactory.INSTANCE.getDecryptor(saltIv);
             String decryptedPassword = decryptor.decrypt(password);
 
-            Hasher hasher = new Hasher();
+            Hasher hasher = new Hasher(user.get().getSalt());
             hashedPassword = hasher.hash(decryptedPassword);
         } catch (Exception e) {
             e.printStackTrace();

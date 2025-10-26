@@ -20,6 +20,10 @@ public class Hasher {
         this.salt = generateBytes(16);
     }
 
+    public Hasher(String salt){
+        this.salt = Encoder.decodeBase64(salt);
+    }
+
     public String hash(String data) throws InvalidKeySpecException, NoSuchAlgorithmException{
         byte[] hash = null;
         SecretKeyFactory factory = SecretKeyFactory.getInstance(KEY_ALGO);
