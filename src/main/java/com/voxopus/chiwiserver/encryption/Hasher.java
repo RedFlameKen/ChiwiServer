@@ -20,17 +20,12 @@ public class Hasher {
         this.salt = generateBytes(16);
     }
 
-    public String hash(String data){
+    public String hash(String data) throws InvalidKeySpecException, NoSuchAlgorithmException{
         byte[] hash = null;
-        try {
-            SecretKeyFactory factory = SecretKeyFactory.getInstance(KEY_ALGO);
-            KeySpec spec = new PBEKeySpec(data.toCharArray(), salt, 
-                    KEY_SPEC_ITER, KEY_SPEC_LEN);
-            hash = factory.generateSecret(spec).getEncoded();
-        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
-            e.printStackTrace();
-            return null;
-        }
+        SecretKeyFactory factory = SecretKeyFactory.getInstance(KEY_ALGO);
+        KeySpec spec = new PBEKeySpec(data.toCharArray(), salt, 
+                KEY_SPEC_ITER, KEY_SPEC_LEN);
+        hash = factory.generateSecret(spec).getEncoded();
         return Encoder.encodeBase64(hash);
     }
 
