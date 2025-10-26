@@ -7,9 +7,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.voxopus.chiwiserver.model.user.User;
 import com.voxopus.chiwiserver.request.user.UserRequestData;
 import com.voxopus.chiwiserver.response.ResponseData;
+import com.voxopus.chiwiserver.response.user.CreateUserResponseData;
 import com.voxopus.chiwiserver.service.user.UserService;
 import com.voxopus.chiwiserver.util.Checker;
 
@@ -21,7 +21,7 @@ public class UserController {
 
     @PostMapping("/signup")
     public ResponseEntity<?> signup(@RequestBody UserRequestData body){
-        Checker<User> checker = userService.createUser(
+        Checker<CreateUserResponseData> checker = userService.createUser(
                 body.getUsername(), 
                 body.getPassword(), 
                 body.getSalt_iv());
