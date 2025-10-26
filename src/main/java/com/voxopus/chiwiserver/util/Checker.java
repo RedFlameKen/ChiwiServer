@@ -8,7 +8,7 @@ public class Checker<T> {
 
     public Checker(T data){
         this.data = data;
-        this.message = "";
+        this.message = null;
         this.exception = null;
     }
 
@@ -48,6 +48,19 @@ public class Checker<T> {
         return checker;
     }
 
+    public static <T> Checker<T> fail(Exception exception, String message){
+        Checker<T> checker = new Checker<>(null);
+        checker.setException(exception);
+        checker.setMessage(message);
+        return checker;
+    }
+
+    public static <T> Checker<T> ok(String message, T data){
+        Checker<T> checker = new Checker<T>(data);
+        checker.setMessage(message);
+        return checker;
+    }
+    
     public static <T> Checker<T> ok(T data){
         return new Checker<T>(data);
     }
