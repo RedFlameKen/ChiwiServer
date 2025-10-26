@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class CreateReviewerResponseData {
+public class ReviewerResponseData {
 
     Long reviewer_id;
     String reviewer_name;

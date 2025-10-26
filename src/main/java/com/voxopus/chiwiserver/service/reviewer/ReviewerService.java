@@ -14,7 +14,7 @@ import com.voxopus.chiwiserver.repository.reviewer.ReviewSessionRepository;
 import com.voxopus.chiwiserver.repository.reviewer.ReviewerRepository;
 import com.voxopus.chiwiserver.repository.user.UserRepository;
 import com.voxopus.chiwiserver.request.reviewer.CreateReviewerRequestData;
-import com.voxopus.chiwiserver.response.reviewer.CreateReviewerResponseData;
+import com.voxopus.chiwiserver.response.reviewer.ReviewerResponseData;
 import com.voxopus.chiwiserver.util.Checker;
 
 @Service
@@ -30,7 +30,7 @@ public class ReviewerService {
     private UserRepository userRepository;
 
 
-    public Checker<CreateReviewerResponseData> addReviewer(CreateReviewerRequestData data){
+    public Checker<ReviewerResponseData> addReviewer(CreateReviewerRequestData data){
         Optional<User> user = userRepository.findById(data.getUser_id());
 
         if(!user.isPresent()){
@@ -47,7 +47,7 @@ public class ReviewerService {
 
         reviewer = reviewerRepository.save(reviewer);
         return Checker.ok("reviewer successfully created", 
-                CreateReviewerResponseData.builder()
+                ReviewerResponseData.builder()
                 .reviewer_id(reviewer.getId())
                 .reviewer_name(reviewer.getName())
                 .user_id(reviewer.getUser().getId())
