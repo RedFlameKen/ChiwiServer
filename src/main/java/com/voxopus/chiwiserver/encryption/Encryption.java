@@ -23,13 +23,13 @@ public class Encryption {
 
     protected SecretKey key;
 
-    public Encryption(String password, byte[] salt, byte[] iv){
+    Encryption(String password, byte[] salt, byte[] iv){
         this.password = password;
         this.salt = salt;
         this.iv = iv;
     }
 
-    public Encryption(String password){
+    Encryption(String password){
         this.password = password;
     }
 

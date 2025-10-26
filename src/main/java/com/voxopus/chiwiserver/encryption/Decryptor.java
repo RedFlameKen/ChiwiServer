@@ -13,7 +13,7 @@ import javax.crypto.spec.GCMParameterSpec;
 
 public class Decryptor extends Encryption {
 
-    public Decryptor(String password, String saltIv) {
+    Decryptor(String password, String saltIv) {
         super(password);
         byte[] salt = new byte[16];
         byte[] iv = new byte[16];

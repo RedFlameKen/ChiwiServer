@@ -14,7 +14,7 @@ import javax.crypto.spec.GCMParameterSpec;
 
 public class Encryptor extends Encryption {
 
-    public Encryptor(String password) {
+    Encryptor(String password) {
         super(password);
         setSalt(generateBytes(16));
         setIv(generateBytes(16));
