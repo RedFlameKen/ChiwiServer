@@ -13,6 +13,8 @@ import com.voxopus.chiwiserver.model.user.User;
 import com.voxopus.chiwiserver.repository.reviewer.ReviewSessionRepository;
 import com.voxopus.chiwiserver.repository.reviewer.ReviewerRepository;
 import com.voxopus.chiwiserver.repository.user.UserRepository;
+import com.voxopus.chiwiserver.request.reviewer.CreateReviewerRequestData;
+import com.voxopus.chiwiserver.response.reviewer.CreateReviewerResponseData;
 import com.voxopus.chiwiserver.util.Checker;
 
 @Service
@@ -28,10 +30,28 @@ public class ReviewerService {
     private UserRepository userRepository;
 
 
-    public Reviewer addReviewer(String name){
-        Reviewer reviewer = Reviewer.builder().name(name).build();
-        reviewerRepository.save(reviewer);
-        return reviewer;
+    public Checker<CreateReviewerResponseData> addReviewer(CreateReviewerRequestData data){
+        Optional<User> user = userRepository.findById(data.getUser_id());
+
+        if(!user.isPresent()){
+            return Checker.fail("no user with the given id was found");
+        }
+
+        Date cur_date = new Date();
+        Reviewer reviewer = Reviewer.builder()
+            .name(data.getReviewer_name())
+            .user(user.get())
+            .date_created(cur_date)
+            .date_modified(cur_date)
+            .build();
+
+        reviewer = reviewerRepository.save(reviewer);
+        return Checker.ok("reviewer successfully created", 
+                CreateReviewerResponseData.builder()
+                .reviewer_id(reviewer.getId())
+                .reviewer_name(reviewer.getName())
+                .user_id(reviewer.getUser().getId())
+                .build());
     }
 
     public List<Reviewer> getReviewersByUserId(Long userId){
