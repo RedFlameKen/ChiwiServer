@@ -30,10 +30,17 @@ public class UserController {
         ResponseData<?> response;
 
         if(!checker.isOk()){
-            status = HttpStatus.CONFLICT;
+            String message;
+            if(checker.getException() != null){
+                status = HttpStatus.INTERNAL_SERVER_ERROR;
+                message = checker.getException().getMessage();
+            } else {
+                status = HttpStatus.CONFLICT;
+                message = "username is unavailable";
+            }
             response = ResponseData.builder()
                 .statusCode(status.value())
-                .message("username is unavailable")
+                .message(message)
                 .build();
 
             return new ResponseEntity<>(response, status);
