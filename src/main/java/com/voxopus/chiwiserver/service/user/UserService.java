@@ -95,6 +95,7 @@ public class UserService {
 
         return Checker.ok("successfully logged in",
                 UserLoginResponseData.builder()
+                .user_id(user.get().getId())
                 .username(data.getUsername())
                 .dateLoggedIn(new Date())
                 .build());

@@ -9,6 +9,7 @@ import lombok.Data;
 @Builder
 public class UserLoginResponseData {
 
+    Long user_id;
     String username;
     Date dateLoggedIn;
     
