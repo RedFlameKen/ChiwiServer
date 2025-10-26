@@ -11,6 +11,6 @@ public class UserLoginResponseData {
 
     Long user_id;
     String username;
-    Date dateLoggedIn;
+    Date date_logged_in;
     
 }

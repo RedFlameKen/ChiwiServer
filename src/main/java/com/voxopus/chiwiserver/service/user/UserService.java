@@ -60,7 +60,7 @@ public class UserService {
         return Checker.ok("successfully registered the account",
                 UserCreatedResponseData.builder()
                 .username(username)
-                .dateCreated(dateCreated)
+                .date_created(dateCreated)
                 .build());
     }
 
@@ -97,7 +97,7 @@ public class UserService {
                 UserLoginResponseData.builder()
                 .user_id(user.get().getId())
                 .username(data.getUsername())
-                .dateLoggedIn(new Date())
+                .date_logged_in(new Date())
                 .build());
     }
 

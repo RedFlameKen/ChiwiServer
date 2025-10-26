@@ -10,6 +10,6 @@ import lombok.Data;
 public class UserCreatedResponseData {
 
     String username;
-    Date dateCreated;
+    Date date_created;
     
 }
