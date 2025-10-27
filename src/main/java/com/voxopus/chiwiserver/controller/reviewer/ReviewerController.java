@@ -83,4 +83,19 @@ public class ReviewerController {
         return new ResponseEntity<>(response, status);
     }
 
+    @GetMapping("{reviewer_id}/flashcard")
+    public ResponseEntity<?> listFlashcards(@PathVariable("reviewer_id") Long reviewerId){
+        Checker<?> checker = reviewerService.listFlashcards(reviewerId);
+        ResponseData<?> response;
+        HttpStatus status = checker.isOk() ? HttpStatus.NOT_FOUND : HttpStatus.OK;
+
+        response = ResponseData.builder()
+            .status_code(status.value())
+            .message(checker.getMessage())
+            .data(checker.get())
+            .build();
+
+        return new ResponseEntity<>(response, status);
+    }
+
 }

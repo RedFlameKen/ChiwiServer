@@ -118,7 +118,6 @@ public class ReviewerService {
 
     public Checker<?> createFlashcard(Long reviewerId, CreateFlashcardRequestData data) {
         Optional<Reviewer> reviewer = reviewerRepository.findById(reviewerId);
-
         if (!reviewer.isPresent()) {
             return Checker.fail("reviewer not found");
         }
@@ -156,6 +155,38 @@ public class ReviewerService {
                         .reviewer_id(flashcard.getReviewer().getId())
                         .answers(answers)
                         .build());
+    }
+
+    public Checker<List<FlashcardResponseData>> listFlashcards(Long reviewerId){
+        Optional<Reviewer> reviewer = reviewerRepository.findById(reviewerId);
+        if (!reviewer.isPresent()) {
+            return Checker.fail("reviewer not found");
+        }
+
+        ArrayList<FlashcardResponseData> response = new ArrayList<>();
+
+        List<Flashcard> flashcards = flashcardRepository.findByReviewerId(reviewerId);
+
+        for (Flashcard flashcard : flashcards) {
+            ArrayList<AnswerResponseData> answers = new ArrayList<>();
+            for (Answer answer : flashcard.getAnswers()) {
+                answers.add(AnswerResponseData.builder()
+                        .id(answer.getId())
+                        .answer(answer.getAnswer())
+                        .build());
+            }
+            response.add(FlashcardResponseData.builder()
+                .flashcard_id(flashcard.getId())
+                .question(flashcard.getQuestion())
+                .flashcard_type(flashcard.getType().toString())
+                .reviewer_id(flashcard.getReviewer().getId())
+                .date_created(flashcard.getDate_created())
+                .date_modified(flashcard.getDate_modified())
+                .answers(answers)
+                .build());
+        }
+
+        return Checker.ok("successfully fetched reviewers", response);
     }
 
     private void writeAnswers(Flashcard flashcard, ArrayList<AnswerResponseData> answers,
