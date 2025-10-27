@@ -38,3 +38,4 @@ build/
 ### configs ###
 .db_config.json
 .encryption_config.json
+test_json/

@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.voxopus.chiwiserver.request.reviewer.CreateFlashcardRequestData;
 import com.voxopus.chiwiserver.request.reviewer.CreateReviewerRequestData;
 import com.voxopus.chiwiserver.response.ResponseData;
 import com.voxopus.chiwiserver.service.reviewer.ReviewerService;
@@ -23,7 +24,7 @@ public class ReviewerController {
     private ReviewerService reviewerService;
 
     @PostMapping("create")
-    public ResponseEntity<?> createReviewer(@RequestBody CreateReviewerRequestData body){
+    public ResponseEntity<?> createReviewer(@RequestBody CreateReviewerRequestData body) {
         Checker<?> checker = reviewerService.addReviewer(body);
         HttpStatus status;
         ResponseData<?> response;
@@ -31,22 +32,47 @@ public class ReviewerController {
         status = checker.isOk() ? HttpStatus.OK : HttpStatus.NOT_FOUND;
 
         response = ResponseData.builder()
-            .status_code(status.value())
-            .message(checker.getMessage())
-            .data(checker.get())
-            .build();
+                .status_code(status.value())
+                .message(checker.getMessage())
+                .data(checker.get())
+                .build();
 
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return new ResponseEntity<>(response, status);
     }
 
     @GetMapping("list/{user_id}")
-    public ResponseEntity<?> listReviewers(@PathVariable("user_id") Long userId){
-        Checker<?> checker =
-            reviewerService.getReviewersByUserId(userId);
+    public ResponseEntity<?> listReviewers(@PathVariable("user_id") Long userId) {
+        Checker<?> checker = reviewerService.getReviewersByUserId(userId);
         ResponseData<?> response;
         HttpStatus status;
 
         status = checker.isOk() ? HttpStatus.OK : HttpStatus.NOT_FOUND;
+
+        response = ResponseData.builder()
+                .status_code(status.value())
+                .message(checker.getMessage())
+                .data(checker.get())
+                .build();
+
+        return new ResponseEntity<>(response, status);
+
+    }
+
+    @PostMapping("{reviewer_id}/flashcard/create")
+    public ResponseEntity<?> createFlashcard(@PathVariable("reviewer_id") Long reviewerId,
+            @RequestBody CreateFlashcardRequestData body) {
+
+        Checker<?> checker = reviewerService.createFlashcard(reviewerId, body);
+        ResponseData<?> response;
+        HttpStatus status;
+
+        if(!checker.isOk()){
+            if(checker.getException() != null)
+                status = HttpStatus.BAD_REQUEST;
+            else
+                status = HttpStatus.NOT_FOUND;
+        } else 
+            status = HttpStatus.OK;
 
         response = ResponseData.builder()
             .status_code(status.value())
@@ -54,8 +80,7 @@ public class ReviewerController {
             .data(checker.get())
             .build();
 
-        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
-
+        return new ResponseEntity<>(response, status);
     }
-    
+
 }
