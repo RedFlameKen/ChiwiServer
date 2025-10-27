@@ -193,7 +193,11 @@ public class ReviewerService {
             List<CreateAnswerRequestData> requestAnswers) {
         for (int i = 0; i < requestAnswers.size(); i++) {
             var _answer = requestAnswers.get(i);
-            Answer answer = createAnswer(flashcard, _answer);
+            Answer answer = Answer.builder()
+                .answer(_answer.getAnswer())
+                .flashcard(flashcard)
+                .build();
+            answerRepository.save(answer);
             answers.add(AnswerResponseData.builder()
                     .id(answer.getId())
                     .answer(answer.getAnswer())
@@ -201,13 +205,44 @@ public class ReviewerService {
         }
     }
 
-    private Answer createAnswer(Flashcard flashcard, CreateAnswerRequestData data) {
+    public Checker<AnswerResponseData> addAnswer(Long flashcardId, CreateAnswerRequestData data) {
+        Optional<Flashcard> flashcard = flashcardRepository.findById(flashcardId);
+
+        if(!flashcard.isPresent())
+            Checker.fail("flashcard not found");
+
+        // TODO: add check for if number of answers are appropriate to flashcard type
         Answer answer = Answer.builder()
                 .answer(data.getAnswer())
-                .flashcard(flashcard)
+                .flashcard(flashcard.get())
                 .build();
-        answerRepository.save(answer);
-        return answer;
+
+        answer = answerRepository.save(answer);
+
+        return Checker.ok("Successfully created answer", AnswerResponseData.builder()
+                .id(answer.getId())
+                .answer(answer.getAnswer())
+                .build());
+    }
+
+    public Checker<List<AnswerResponseData>> listAnswers(Long flashcardId){
+        Optional<Flashcard> flashcard = flashcardRepository.findById(flashcardId);
+
+        if(!flashcard.isPresent())
+            Checker.fail("flashcard not found");
+
+        List<Answer> answers = answerRepository.findByFlashcardId(flashcardId);
+
+        ArrayList<AnswerResponseData> response = new ArrayList<>();
+
+        for (Answer answer : answers) {
+            response.add(AnswerResponseData.builder()
+                    .id(answer.getId())
+                    .answer(answer.getAnswer())
+                    .build());
+        }
+
+        return Checker.ok("successfully fetched answers", response);
     }
 
 }

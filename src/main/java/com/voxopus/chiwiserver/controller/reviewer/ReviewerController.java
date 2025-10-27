@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.voxopus.chiwiserver.request.reviewer.CreateAnswerRequestData;
 import com.voxopus.chiwiserver.request.reviewer.CreateFlashcardRequestData;
 import com.voxopus.chiwiserver.request.reviewer.CreateReviewerRequestData;
 import com.voxopus.chiwiserver.response.ResponseData;
@@ -87,7 +88,7 @@ public class ReviewerController {
     public ResponseEntity<?> listFlashcards(@PathVariable("reviewer_id") Long reviewerId){
         Checker<?> checker = reviewerService.listFlashcards(reviewerId);
         ResponseData<?> response;
-        HttpStatus status = checker.isOk() ? HttpStatus.NOT_FOUND : HttpStatus.OK;
+        HttpStatus status = checker.isOk() ? HttpStatus.OK : HttpStatus.NOT_FOUND;
 
         response = ResponseData.builder()
             .status_code(status.value())
@@ -98,4 +99,39 @@ public class ReviewerController {
         return new ResponseEntity<>(response, status);
     }
 
+    @PostMapping("{reviewer_id}/flashcard/{flashcard_id}/add")
+    public ResponseEntity<?> addAnswer(
+            @PathVariable("reviewer_id") Long reviewerId,
+            @PathVariable("flashcard_id") Long flashcardId,
+            @RequestBody CreateAnswerRequestData body
+            ){
+        Checker<?> checker = reviewerService.addAnswer(flashcardId, body);
+        ResponseData<?> response;
+        HttpStatus status = checker.isOk() ? HttpStatus.OK : HttpStatus.NOT_FOUND;
+
+        response = ResponseData.builder()
+            .status_code(status.value())
+            .message(checker.getMessage())
+            .data(checker.get())
+            .build();
+
+        return new ResponseEntity<>(response, status);
+    }
+
+    @GetMapping("{reviewer_id}/flashcard/{flashcard_id}")
+    public ResponseEntity<?> listAnswers(
+            @PathVariable("reviewer_id") Long reviewerId,
+            @PathVariable("flashcard_id") Long flashcardId){
+        Checker<?> checker = reviewerService.listAnswers(flashcardId);
+        ResponseData<?> response;
+        HttpStatus status = checker.isOk() ? HttpStatus.OK : HttpStatus.NOT_FOUND;
+
+        response = ResponseData.builder()
+            .status_code(status.value())
+            .message(checker.getMessage())
+            .data(checker.get())
+            .build();
+
+        return new ResponseEntity<>(response, status);
+    }
 }
