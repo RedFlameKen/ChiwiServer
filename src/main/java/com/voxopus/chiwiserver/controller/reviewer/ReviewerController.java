@@ -20,11 +20,11 @@ import com.voxopus.chiwiserver.util.Checker;
 public class ReviewerController {
 
     @Autowired
-    private ReviewerService reviewService;
+    private ReviewerService reviewerService;
 
     @PostMapping("create")
     public ResponseEntity<?> createReviewer(@RequestBody CreateReviewerRequestData body){
-        Checker<?> checker = reviewService.addReviewer(body);
+        Checker<?> checker = reviewerService.addReviewer(body);
         HttpStatus status;
         ResponseData<?> response;
 
@@ -42,7 +42,7 @@ public class ReviewerController {
     @GetMapping("list/{user_id}")
     public ResponseEntity<?> listReviewers(@PathVariable("user_id") Long userId){
         Checker<?> checker =
-            reviewService.getReviewersByUserId(userId);
+            reviewerService.getReviewersByUserId(userId);
         ResponseData<?> response;
         HttpStatus status;
 
