@@ -85,6 +85,7 @@ public class ReviewerService {
             responseData.add(ListReviewersResponseData.builder()
                     .id(reviewer.getId())
                     .name(reviewer.getName())
+                    .subject(reviewer.getSubject())
                     .flashcards_count(reviewer.getFlashcards().size())
                     .build());
         });
