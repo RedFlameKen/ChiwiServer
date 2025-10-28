@@ -33,10 +33,25 @@ public class ReviewerController {
     private AuthTokenService authTokenService;
 
     @PostMapping("create")
-    public ResponseEntity<?> createReviewer(@RequestBody CreateReviewerRequestData body) {
-        Checker<?> checker = reviewerService.addReviewer(body);
+    public ResponseEntity<?> createReviewer(HttpServletRequest request,
+            @RequestBody CreateReviewerRequestData body) {
+        String token = 
+            HeaderUtil.extractAuthToken(request.getHeader("Authorization"));
+
         HttpStatus status;
         ResponseData<?> response;
+
+        Checker<User> user = authTokenService.findUserByAuthToken(token);
+        if(!user.isOk()){
+            response = ResponseData.builder()
+                .status_code(HttpStatus.UNAUTHORIZED.value())
+                .message(user.getMessage())
+                .data(user.get())
+                .build();
+            return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+        }
+
+        Checker<?> checker = reviewerService.addReviewer(user.get().getId(), body);
 
         status = checker.isOk() ? HttpStatus.OK : HttpStatus.NOT_FOUND;
 

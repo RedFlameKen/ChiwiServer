@@ -9,6 +9,5 @@ public class CreateReviewerRequestData {
 
     String reviewer_name;
     String subject;
-    Long user_id;
     
 }

@@ -46,8 +46,8 @@ public class ReviewerService {
     @Autowired
     private UserRepository userRepository;
 
-    public Checker<ReviewerResponseData> addReviewer(CreateReviewerRequestData data) {
-        Optional<User> user = userRepository.findById(data.getUser_id());
+    public Checker<ReviewerResponseData> addReviewer(Long userId, CreateReviewerRequestData data) {
+        Optional<User> user = userRepository.findById(userId);
 
         if (!user.isPresent()) {
             return Checker.fail("no user with the given id was found");
