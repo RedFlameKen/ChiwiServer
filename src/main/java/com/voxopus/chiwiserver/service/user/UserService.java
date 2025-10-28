@@ -118,6 +118,10 @@ public class UserService {
                 .build());
     }
 
+    public void logout(User user){
+        authTokenService.deleteAuthToken(user.getAuthToken());
+    }
+
     private boolean usernameUsed(String username){
         return userRepository.findByUsername(username).isPresent();
     }

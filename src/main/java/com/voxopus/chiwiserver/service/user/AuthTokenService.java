@@ -102,7 +102,7 @@ public class AuthTokenService {
         return token.getExpiration_date().compareTo(curDate) <= 0;
     }
 
-    private void deleteAuthToken(AuthToken token){
+    public void deleteAuthToken(AuthToken token){
         token.getUser().setAuthToken(null);
         userRepository.save(token.getUser());
         authTokenRepository.delete(token);

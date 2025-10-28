@@ -1,6 +1,5 @@
 package com.voxopus.chiwiserver.controller.reviewer;
 
-import org.apache.tomcat.util.http.parser.Authorization;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,7 +10,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.voxopus.chiwiserver.model.user.AuthToken;
 import com.voxopus.chiwiserver.model.user.User;
 import com.voxopus.chiwiserver.request.reviewer.CreateAnswerRequestData;
 import com.voxopus.chiwiserver.request.reviewer.CreateFlashcardRequestData;

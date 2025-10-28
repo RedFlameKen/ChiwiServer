@@ -3,22 +3,31 @@ package com.voxopus.chiwiserver.controller.user;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.voxopus.chiwiserver.model.user.User;
 import com.voxopus.chiwiserver.request.user.UserRequestData;
 import com.voxopus.chiwiserver.response.ResponseData;
 import com.voxopus.chiwiserver.response.user.UserCreatedResponseData;
 import com.voxopus.chiwiserver.response.user.UserLoginResponseData;
+import com.voxopus.chiwiserver.service.user.AuthTokenService;
 import com.voxopus.chiwiserver.service.user.UserService;
 import com.voxopus.chiwiserver.util.Checker;
+import com.voxopus.chiwiserver.util.HeaderUtil;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 public class UserController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private AuthTokenService authTokenService;
 
     @PostMapping("/signup")
     public ResponseEntity<?> signup(@RequestBody UserRequestData body){
@@ -63,6 +72,36 @@ public class UserController {
             .status_code(status.value())
             .message(checker.getMessage())
             .data(checker.get())
+            .build();
+
+        return new ResponseEntity<>(response, status);
+    }
+
+    @GetMapping("/logout")
+    public ResponseEntity<?> logout(HttpServletRequest request){
+        String token = 
+            HeaderUtil.extractAuthToken(request.getHeader("Authorization"));
+
+        ResponseData<?> response;
+        HttpStatus status;
+
+        Checker<User> user = authTokenService.findUserByAuthToken(token);
+
+        if(!user.isOk()){
+            status = HttpStatus.UNAUTHORIZED;
+            response = ResponseData.builder()
+                .status_code(status.value())
+                .message(user.getMessage())
+                .build();
+            return new ResponseEntity<>(response, status);
+        }
+
+        userService.logout(user.get());
+
+        status = HttpStatus.OK;
+        response = ResponseData.builder()
+            .status_code(status.value())
+            .message("successfully logged out")
             .build();
 
         return new ResponseEntity<>(response, status);
