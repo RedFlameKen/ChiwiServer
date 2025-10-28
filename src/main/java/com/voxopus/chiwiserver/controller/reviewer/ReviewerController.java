@@ -1,7 +1,5 @@
 package com.voxopus.chiwiserver.controller.reviewer;
 
-import java.util.Optional;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -36,8 +34,8 @@ public class ReviewerController {
     private AuthTokenService authTokenService;
 
     @PostMapping("create")
-    public ResponseEntity<?> createReviewer(HttpServletRequest request,
-            @RequestBody CreateReviewerRequestData body) {
+    public ResponseEntity<?> createReviewer(@RequestBody CreateReviewerRequestData body,
+            HttpServletRequest request) {
         String token = 
             HeaderUtil.extractAuthToken(request.getHeader("Authorization"));
 
@@ -149,10 +147,41 @@ public class ReviewerController {
     }
 
     @GetMapping("{reviewer_id}/flashcard")
-    public ResponseEntity<?> listFlashcards(@PathVariable("reviewer_id") Long reviewerId){
-        Checker<?> checker = reviewerService.listFlashcards(reviewerId);
+    public ResponseEntity<?> listFlashcards(@PathVariable("reviewer_id") Long reviewerId, HttpServletRequest request){
+        String token = 
+            HeaderUtil.extractAuthToken(request.getHeader("Authorization"));
+
         ResponseData<?> response;
-        HttpStatus status = checker.isOk() ? HttpStatus.OK : HttpStatus.NOT_FOUND;
+        HttpStatus status;
+
+        Checker<User> user = authTokenService.findUserByAuthToken(token);
+        if(!user.isOk()){
+            status = HttpStatus.UNAUTHORIZED;
+            response = createResponseData(status, user);
+            return new ResponseEntity<>(response, status);
+        }
+
+        Checker<Reviewer> reviewer = reviewerService.getReviewer(reviewerId);
+        if(!reviewer.isOk()){
+            status = HttpStatus.NOT_FOUND;
+            response = ResponseData.builder()
+                .status_code(status.value())
+                .message(reviewer.getMessage())
+                .data(null)
+                .build();
+            return new ResponseEntity<>(response, status);
+        } else if (reviewer.get().getUser().getId() != user.get().getId()) {
+            status = HttpStatus.UNAUTHORIZED;
+            response = ResponseData.builder()
+                .status_code(status.value())
+                .message(reviewer.getMessage())
+                .data(null)
+                .build();
+            return new ResponseEntity<>(response, status);
+        }
+
+        Checker<?> checker = reviewerService.listFlashcards(reviewerId);
+        status = HttpStatus.OK;
 
         response = ResponseData.builder()
             .status_code(status.value())
@@ -167,11 +196,43 @@ public class ReviewerController {
     public ResponseEntity<?> addAnswer(
             @PathVariable("reviewer_id") Long reviewerId,
             @PathVariable("flashcard_id") Long flashcardId,
-            @RequestBody CreateAnswerRequestData body
+            @RequestBody CreateAnswerRequestData body,
+            HttpServletRequest request
             ){
-        Checker<?> checker = reviewerService.addAnswer(flashcardId, body);
+        String token = 
+            HeaderUtil.extractAuthToken(request.getHeader("Authorization"));
+
         ResponseData<?> response;
-        HttpStatus status = checker.isOk() ? HttpStatus.OK : HttpStatus.NOT_FOUND;
+        HttpStatus status;
+
+        Checker<User> user = authTokenService.findUserByAuthToken(token);
+        if(!user.isOk()){
+            status = HttpStatus.UNAUTHORIZED;
+            response = createResponseData(status, user);
+            return new ResponseEntity<>(response, status);
+        }
+
+        Checker<Reviewer> reviewer = reviewerService.getReviewer(reviewerId);
+        if(!reviewer.isOk()){
+            status = HttpStatus.NOT_FOUND;
+            response = ResponseData.builder()
+                .status_code(status.value())
+                .message(reviewer.getMessage())
+                .data(null)
+                .build();
+            return new ResponseEntity<>(response, status);
+        } else if (reviewer.get().getUser().getId() != user.get().getId()) {
+            status = HttpStatus.UNAUTHORIZED;
+            response = ResponseData.builder()
+                .status_code(status.value())
+                .message(reviewer.getMessage())
+                .data(null)
+                .build();
+            return new ResponseEntity<>(response, status);
+        }
+
+        Checker<?> checker = reviewerService.addAnswer(flashcardId, body);
+        status = checker.isOk() ? HttpStatus.OK : HttpStatus.NOT_FOUND;
 
         response = ResponseData.builder()
             .status_code(status.value())
@@ -185,10 +246,43 @@ public class ReviewerController {
     @GetMapping("{reviewer_id}/flashcard/{flashcard_id}")
     public ResponseEntity<?> listAnswers(
             @PathVariable("reviewer_id") Long reviewerId,
-            @PathVariable("flashcard_id") Long flashcardId){
-        Checker<?> checker = reviewerService.listAnswers(flashcardId);
+            @PathVariable("flashcard_id") Long flashcardId,
+            HttpServletRequest request
+            ){
+        String token = 
+            HeaderUtil.extractAuthToken(request.getHeader("Authorization"));
+
         ResponseData<?> response;
-        HttpStatus status = checker.isOk() ? HttpStatus.OK : HttpStatus.NOT_FOUND;
+        HttpStatus status;
+
+        Checker<User> user = authTokenService.findUserByAuthToken(token);
+        if(!user.isOk()){
+            status = HttpStatus.UNAUTHORIZED;
+            response = createResponseData(status, user);
+            return new ResponseEntity<>(response, status);
+        }
+
+        Checker<Reviewer> reviewer = reviewerService.getReviewer(reviewerId);
+        if(!reviewer.isOk()){
+            status = HttpStatus.NOT_FOUND;
+            response = ResponseData.builder()
+                .status_code(status.value())
+                .message(reviewer.getMessage())
+                .data(null)
+                .build();
+            return new ResponseEntity<>(response, status);
+        } else if (reviewer.get().getUser().getId() != user.get().getId()) {
+            status = HttpStatus.UNAUTHORIZED;
+            response = ResponseData.builder()
+                .status_code(status.value())
+                .message(reviewer.getMessage())
+                .data(null)
+                .build();
+            return new ResponseEntity<>(response, status);
+        }
+
+        Checker<?> checker = reviewerService.listAnswers(flashcardId);
+        status = checker.isOk() ? HttpStatus.OK : HttpStatus.NOT_FOUND;
 
         response = ResponseData.builder()
             .status_code(status.value())
