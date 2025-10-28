@@ -12,5 +12,6 @@ public class UserLoginResponseData {
     Long user_id;
     String username;
     Date date_logged_in;
+    String auth_token;
     
 }

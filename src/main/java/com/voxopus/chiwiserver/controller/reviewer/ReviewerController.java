@@ -1,5 +1,6 @@
 package com.voxopus.chiwiserver.controller.reviewer;
 
+import org.apache.tomcat.util.http.parser.Authorization;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,19 +11,28 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.voxopus.chiwiserver.model.user.AuthToken;
+import com.voxopus.chiwiserver.model.user.User;
 import com.voxopus.chiwiserver.request.reviewer.CreateAnswerRequestData;
 import com.voxopus.chiwiserver.request.reviewer.CreateFlashcardRequestData;
 import com.voxopus.chiwiserver.request.reviewer.CreateReviewerRequestData;
 import com.voxopus.chiwiserver.response.ResponseData;
 import com.voxopus.chiwiserver.service.reviewer.ReviewerService;
+import com.voxopus.chiwiserver.service.user.AuthTokenService;
 import com.voxopus.chiwiserver.util.Checker;
+import com.voxopus.chiwiserver.util.HeaderUtil;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
-@RequestMapping("/review")
+@RequestMapping("/reviewers")
 public class ReviewerController {
 
     @Autowired
     private ReviewerService reviewerService;
+
+    @Autowired
+    private AuthTokenService authTokenService;
 
     @PostMapping("create")
     public ResponseEntity<?> createReviewer(@RequestBody CreateReviewerRequestData body) {
@@ -41,11 +51,25 @@ public class ReviewerController {
         return new ResponseEntity<>(response, status);
     }
 
-    @GetMapping("list/{user_id}")
-    public ResponseEntity<?> listReviewers(@PathVariable("user_id") Long userId) {
-        Checker<?> checker = reviewerService.getReviewersByUserId(userId);
+    @GetMapping("list")
+    public ResponseEntity<?> listReviewers(HttpServletRequest request) {
+        String token = 
+            HeaderUtil.extractAuthToken(request.getHeader("Authorization"));
+
         ResponseData<?> response;
         HttpStatus status;
+
+        Checker<User> user = authTokenService.findUserByAuthToken(token);
+        if(!user.isOk()){
+            response = ResponseData.builder()
+                .status_code(HttpStatus.UNAUTHORIZED.value())
+                .message(user.getMessage())
+                .data(user.get())
+                .build();
+            return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+        }
+
+        Checker<?> checker = reviewerService.getReviewersByUserId(user.get().getId());
 
         status = checker.isOk() ? HttpStatus.OK : HttpStatus.NOT_FOUND;
 
@@ -134,4 +158,5 @@ public class ReviewerController {
 
         return new ResponseEntity<>(response, status);
     }
+
 }

@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import com.voxopus.chiwiserver.encryption.Decryptor;
 import com.voxopus.chiwiserver.encryption.EncryptionFactory;
 import com.voxopus.chiwiserver.encryption.Hasher;
+import com.voxopus.chiwiserver.model.user.AuthToken;
 import com.voxopus.chiwiserver.model.user.User;
 import com.voxopus.chiwiserver.repository.user.UserRepository;
 import com.voxopus.chiwiserver.request.user.UserRequestData;
@@ -22,6 +23,8 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private AuthTokenService authTokenService;
 
     public Checker<UserCreatedResponseData> createUser(UserRequestData data){
         String username = data.getUsername();
@@ -65,11 +68,8 @@ public class UserService {
     }
 
     public Checker<UserLoginResponseData> login(UserRequestData data){
-        String username = data.getUsername();
-        String password = data.getPassword();
-        String saltIv = data.getSalt_iv();
-
-        Optional<User> user = userRepository.findByUsername(username);
+        Optional<User> user = 
+            userRepository.findByUsername(data.getUsername());
 
         if(!user.isPresent()){
             return Checker.fail("user does not exist");
@@ -77,8 +77,9 @@ public class UserService {
 
         String hashedPassword;
         try {
-            Decryptor decryptor = EncryptionFactory.INSTANCE.getDecryptor(saltIv);
-            String decryptedPassword = decryptor.decrypt(password);
+            Decryptor decryptor = 
+                EncryptionFactory.INSTANCE.getDecryptor(data.getSalt_iv());
+            String decryptedPassword = decryptor.decrypt(data.getPassword());
 
             Hasher hasher = new Hasher(user.get().getSalt());
             hashedPassword = hasher.hash(decryptedPassword);
@@ -93,11 +94,27 @@ public class UserService {
             return Checker.fail("login failed");
         }
 
+        Checker<AuthToken> tokenCheck = 
+            authTokenService.getAuthToken(user.get().getId());
+        if(!tokenCheck.isOk()){
+            tokenCheck = 
+                authTokenService.generateAuthToken(user.get().getId());
+
+            if(!tokenCheck.isOk()){
+                if(tokenCheck.getException() != null)
+                    return Checker.fail(tokenCheck.getException(), 
+                            tokenCheck.getMessage());
+                else
+                    return Checker.fail(tokenCheck.getMessage());
+            }
+        }
+
         return Checker.ok("successfully logged in",
                 UserLoginResponseData.builder()
                 .user_id(user.get().getId())
                 .username(data.getUsername())
                 .date_logged_in(new Date())
+                .auth_token(tokenCheck.get().getToken())
                 .build());
     }
 
