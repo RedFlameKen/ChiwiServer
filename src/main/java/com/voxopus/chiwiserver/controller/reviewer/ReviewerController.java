@@ -1,5 +1,7 @@
 package com.voxopus.chiwiserver.controller.reviewer;
 
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.voxopus.chiwiserver.model.reviewer.Reviewer;
 import com.voxopus.chiwiserver.model.user.User;
 import com.voxopus.chiwiserver.request.reviewer.CreateAnswerRequestData;
 import com.voxopus.chiwiserver.request.reviewer.CreateFlashcardRequestData;
@@ -43,11 +46,8 @@ public class ReviewerController {
 
         Checker<User> user = authTokenService.findUserByAuthToken(token);
         if(!user.isOk()){
-            response = ResponseData.builder()
-                .status_code(HttpStatus.UNAUTHORIZED.value())
-                .message(user.getMessage())
-                .data(user.get())
-                .build();
+            status = HttpStatus.UNAUTHORIZED;
+            response = createResponseData(status, user);
             return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
         }
 
@@ -74,12 +74,9 @@ public class ReviewerController {
 
         Checker<User> user = authTokenService.findUserByAuthToken(token);
         if(!user.isOk()){
-            response = ResponseData.builder()
-                .status_code(HttpStatus.UNAUTHORIZED.value())
-                .message(user.getMessage())
-                .data(user.get())
-                .build();
-            return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+            status = HttpStatus.UNAUTHORIZED;
+            response = createResponseData(status, user);
+            return new ResponseEntity<>(response, status);
         }
 
         Checker<?> checker = reviewerService.getReviewersByUserId(user.get().getId());
@@ -98,11 +95,41 @@ public class ReviewerController {
 
     @PostMapping("{reviewer_id}/flashcard/create")
     public ResponseEntity<?> createFlashcard(@PathVariable("reviewer_id") Long reviewerId,
-            @RequestBody CreateFlashcardRequestData body) {
+            @RequestBody CreateFlashcardRequestData body,
+            HttpServletRequest request) {
+        String token = 
+            HeaderUtil.extractAuthToken(request.getHeader("Authorization"));
 
-        Checker<?> checker = reviewerService.createFlashcard(reviewerId, body);
         ResponseData<?> response;
         HttpStatus status;
+
+        Checker<User> user = authTokenService.findUserByAuthToken(token);
+        if(!user.isOk()){
+            status = HttpStatus.UNAUTHORIZED;
+            response = createResponseData(status, user);
+            return new ResponseEntity<>(response, status);
+        }
+
+        Checker<Reviewer> reviewer = reviewerService.getReviewer(reviewerId);
+        if(!reviewer.isOk()){
+            status = HttpStatus.NOT_FOUND;
+            response = ResponseData.builder()
+                .status_code(status.value())
+                .message(reviewer.getMessage())
+                .data(null)
+                .build();
+            return new ResponseEntity<>(response, status);
+        } else if (reviewer.get().getUser().getId() != user.get().getId()) {
+            status = HttpStatus.UNAUTHORIZED;
+            response = ResponseData.builder()
+                .status_code(status.value())
+                .message(reviewer.getMessage())
+                .data(null)
+                .build();
+            return new ResponseEntity<>(response, status);
+        }
+
+        Checker<?> checker = reviewerService.createFlashcard(reviewer.get(), body);
 
         if(!checker.isOk()){
             if(checker.getException() != null)
@@ -170,6 +197,14 @@ public class ReviewerController {
             .build();
 
         return new ResponseEntity<>(response, status);
+    }
+
+    public ResponseData<?> createResponseData(HttpStatus status, Checker<?> checker){
+        return ResponseData.builder()
+            .status_code(status.value())
+            .message(checker.getMessage())
+            .data(checker.get())
+            .build();
     }
 
 }

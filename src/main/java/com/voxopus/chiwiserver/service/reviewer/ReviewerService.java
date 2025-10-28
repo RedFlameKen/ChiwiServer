@@ -119,12 +119,7 @@ public class ReviewerService {
         return new Checker<>(session);
     }
 
-    public Checker<?> createFlashcard(Long reviewerId, CreateFlashcardRequestData data) {
-        Optional<Reviewer> reviewer = reviewerRepository.findById(reviewerId);
-        if (!reviewer.isPresent()) {
-            return Checker.fail("reviewer not found");
-        }
-
+    public Checker<?> createFlashcard(Reviewer reviewer, CreateFlashcardRequestData data) {
         FlashcardType type;
         try {
             type = FlashcardType.valueOf(data.getFlashcard_type());
@@ -136,7 +131,7 @@ public class ReviewerService {
 
         Flashcard flashcard = Flashcard.builder()
                 .question(data.getQuestion())
-                .reviewer(reviewer.get())
+                .reviewer(reviewer)
                 .date_created(curDate)
                 .type(type)
                 .date_modified(curDate)
@@ -190,6 +185,16 @@ public class ReviewerService {
         }
 
         return Checker.ok("successfully fetched reviewers", response);
+    }
+
+    public Checker<Reviewer> getReviewer(Long reviewerId){
+        Optional<Reviewer> reviewer = reviewerRepository.findById(reviewerId);
+
+        if (!reviewer.isPresent()) {
+            return Checker.fail("reviewer not found");
+        }
+
+        return Checker.ok("reviewer found", reviewer.get());
     }
 
     private void writeAnswers(Flashcard flashcard, ArrayList<AnswerResponseData> answers,
