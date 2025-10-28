@@ -9,6 +9,7 @@ public class ReviewerResponseData {
 
     Long reviewer_id;
     String reviewer_name;
+    String subject;
     Long user_id;
     
 }

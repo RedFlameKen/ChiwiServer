@@ -57,15 +57,17 @@ public class ReviewerService {
         Reviewer reviewer = Reviewer.builder()
                 .name(data.getReviewer_name())
                 .user(user.get())
+                .subject(data.getSubject())
                 .date_created(cur_date)
                 .date_modified(cur_date)
                 .build();
 
-        reviewer = reviewerRepository.save(reviewer);
+        reviewerRepository.save(reviewer);
         return Checker.ok("reviewer successfully created",
                 ReviewerResponseData.builder()
                         .reviewer_id(reviewer.getId())
                         .reviewer_name(reviewer.getName())
+                        .subject(reviewer.getSubject())
                         .user_id(reviewer.getUser().getId())
                         .build());
     }

@@ -9,6 +9,7 @@ public class ListReviewersResponseData {
 
     Long id;
     String name;
+    String subject;
     int flashcards_count;
     
 }

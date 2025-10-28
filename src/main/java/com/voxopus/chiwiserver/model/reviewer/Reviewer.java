@@ -40,6 +40,8 @@ public class Reviewer {
 
     private String name;
 
+    private String subject;
+
     @Temporal(TemporalType.TIMESTAMP)
     private Date date_created;
 
