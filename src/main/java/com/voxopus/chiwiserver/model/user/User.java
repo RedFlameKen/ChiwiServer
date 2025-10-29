@@ -3,6 +3,8 @@ package com.voxopus.chiwiserver.model.user;
 import java.util.Date;
 import java.util.List;
 
+import org.hibernate.annotations.CreationTimestamp;
+
 import com.voxopus.chiwiserver.model.reviewer.ReviewSession;
 import com.voxopus.chiwiserver.model.reviewer.Reviewer;
 
@@ -47,6 +49,7 @@ public class User {
     private String salt;
 
     @Column
+    @CreationTimestamp
     @Temporal(TemporalType.TIMESTAMP)
     private Date date_created;
 

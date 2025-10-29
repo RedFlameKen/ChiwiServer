@@ -3,6 +3,8 @@ package com.voxopus.chiwiserver.model.reviewer;
 import java.util.Date;
 import java.util.List;
 
+import org.hibernate.annotations.CreationTimestamp;
+
 import com.voxopus.chiwiserver.model.user.User;
 
 import jakarta.persistence.CascadeType;
@@ -46,6 +48,7 @@ public class ReviewSession {
 
     @Column(name="time_started")
     @Temporal(TemporalType.TIMESTAMP)
+    @CreationTimestamp
     private Date timeStarted;
 
     @OneToMany(mappedBy = "reviewSession", cascade = CascadeType.ALL)

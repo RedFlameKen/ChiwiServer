@@ -3,6 +3,9 @@ package com.voxopus.chiwiserver.model.reviewer;
 import java.util.Date;
 import java.util.List;
 
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
 import com.voxopus.chiwiserver.enums.FlashcardType;
 
 import jakarta.persistence.CascadeType;
@@ -45,9 +48,11 @@ public class Flashcard {
     private FlashcardType type;
 
     @Temporal(TemporalType.TIMESTAMP)
+    @CreationTimestamp
     private Date date_created;
 
     @Temporal(TemporalType.TIMESTAMP)
+    @UpdateTimestamp
     private Date date_modified;
 
     @ManyToOne

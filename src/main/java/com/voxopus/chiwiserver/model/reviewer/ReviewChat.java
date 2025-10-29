@@ -2,6 +2,8 @@ package com.voxopus.chiwiserver.model.reviewer;
 
 import java.util.Date;
 
+import org.hibernate.annotations.CreationTimestamp;
+
 import com.voxopus.chiwiserver.enums.ReviewChatType;
 
 import jakarta.persistence.Entity;
@@ -40,6 +42,7 @@ public class ReviewChat {
     private ReviewChatType type;
 
     @Temporal(TemporalType.TIMESTAMP)
+    @CreationTimestamp
     private Date time_sent;
 
     @ManyToOne
