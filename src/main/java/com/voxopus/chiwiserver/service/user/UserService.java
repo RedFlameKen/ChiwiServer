@@ -118,6 +118,14 @@ public class UserService {
                 .build());
     }
 
+    public void signout(User user){
+        if(user.getAuthToken() != null){
+            authTokenService.deleteAuthToken(user.getAuthToken());
+        }
+
+        userRepository.delete(user);
+    }
+
     public void logout(User user){
         authTokenService.deleteAuthToken(user.getAuthToken());
     }

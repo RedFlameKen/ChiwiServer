@@ -3,6 +3,7 @@ package com.voxopus.chiwiserver.controller.user;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -102,6 +103,35 @@ public class UserController {
         response = ResponseData.builder()
             .status_code(status.value())
             .message("successfully logged out")
+            .build();
+
+        return new ResponseEntity<>(response, status);
+    }
+
+    @DeleteMapping("/signout")
+    public ResponseEntity<?> signout(HttpServletRequest request){
+        String token = 
+            HeaderUtil.extractAuthToken(request.getHeader("Authorization"));
+
+        ResponseData<?> response;
+        HttpStatus status;
+
+        Checker<User> user = authTokenService.findUserByAuthToken(token);
+
+        if(!user.isOk()){
+            status = HttpStatus.UNAUTHORIZED;
+            response = ResponseData.builder()
+                .status_code(status.value())
+                .message(user.getMessage())
+                .build();
+            return new ResponseEntity<>(response, status);
+        }
+
+        userService.signout(user.get());
+        status = HttpStatus.OK;
+        response = ResponseData.builder()
+            .status_code(status.value())
+            .message("successfully signed user out")
             .build();
 
         return new ResponseEntity<>(response, status);
