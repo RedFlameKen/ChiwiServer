@@ -15,7 +15,6 @@ public class RestCorsConfiguration {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
-                        .allowedOrigins("http://localhost:3434", "https://thinkpad-x230.taila38b71.ts.net")
                         .allowedMethods("*");
             }
 
