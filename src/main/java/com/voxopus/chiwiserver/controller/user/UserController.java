@@ -137,4 +137,16 @@ public class UserController {
         return new ResponseEntity<>(response, status);
     }
 
+    @GetMapping("/test")
+    public ResponseEntity<?> testMapping(){
+        System.out.printf("accessed\n");
+        return ResponseEntity.ok("test mapping reached");
+    }
+
+    @PostMapping("/test")
+    public ResponseEntity<?> testMappingPost(@RequestBody String data){
+        System.out.printf("test mapping reached, data: " + data + "\n");
+        return ResponseEntity.ok("test mapping reached, data: " + data);
+    }
+
 }

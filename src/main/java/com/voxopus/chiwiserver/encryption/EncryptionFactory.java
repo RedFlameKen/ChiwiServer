@@ -4,11 +4,12 @@ import java.io.File;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.voxopus.chiwiserver.util.JsonUtil;
 
 public class EncryptionFactory {
 
-    private static final String CONFIG_FILE = ".encryption_config.json";
+    private static final String CONFIG_FILE = ".server_config.json";
 
     public static EncryptionFactory INSTANCE = new EncryptionFactory();
 
@@ -23,13 +24,14 @@ public class EncryptionFactory {
         File configFile = new File(CONFIG_FILE);
         
         if(!configFile.exists()){
-            Logger.getAnonymousLogger().log(Level.SEVERE, "Encryption Config file does not exist!");
+            Logger.getLogger(getClass().getName()).log(Level.SEVERE, "server config not found");
             System.exit(1);
         }
 
-        encryptionPassword = JsonUtil.getValue(configFile, "password");
+        JsonNode encryptionNode = JsonUtil.getNode(configFile, "encryption");
+        encryptionPassword = JsonUtil.getValueFromNode(encryptionNode, "password");
 
-        if(encryptionPassword == null){
+        if(encryptionPassword == null || encryptionPassword.isEmpty()){
             Logger.getAnonymousLogger().log(Level.SEVERE, "password was not found in the encryption config!");
             System.exit(1);
         }

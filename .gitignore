@@ -36,6 +36,10 @@ build/
 .ignore
 
 ### configs ###
+test_json/
 .db_config.json
 .encryption_config.json
-test_json/
+.server_config.json
+*.p12
+*.crt
+

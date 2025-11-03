@@ -11,6 +11,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.voxopus.chiwiserver.util.JsonUtil;
 
 import lombok.Getter;
@@ -19,7 +20,7 @@ import lombok.Getter;
 @Getter
 public class DatabaseConfiguration {
 
-    private static final String CONFIG_LOCATION = ".db_config.json";
+    private static final String CONFIG_LOCATION = ".server_config.json";
 
     private static final String DRIVERCLASSNAME = "com.mysql.cj.jdbc.Driver";
 
@@ -32,14 +33,16 @@ public class DatabaseConfiguration {
 
         if(!configFile.exists()){
             Logger.getLogger(this.getClass().getName())
-                .log(Level.SEVERE, "Unable to find config file");
+                .log(Level.SEVERE, "server config file not found");
             return null;
         }
 
-        String username = JsonUtil.getValue(configFile, "username");
-        String password = JsonUtil.getValue(configFile, "password");
+        JsonNode dbNode = JsonUtil.getNode(configFile, "database");
 
-        if(username == null || password == null){
+        String username = JsonUtil.getValueFromNode(dbNode, "username");
+        String password = JsonUtil.getValueFromNode(dbNode, "password");
+
+        if(username.isEmpty() || password.isEmpty()){
             Logger.getLogger(this.getClass().getName())
                 .log(Level.SEVERE, "Config file was badly formatted");
             return null;
