@@ -10,7 +10,5 @@ public class UserRequestData {
     String username;
 
     String password;
-
-    String salt_iv;
     
 }

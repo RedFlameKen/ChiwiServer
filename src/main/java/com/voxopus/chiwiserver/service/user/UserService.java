@@ -6,8 +6,6 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.voxopus.chiwiserver.encryption.Decryptor;
-import com.voxopus.chiwiserver.encryption.EncryptionFactory;
 import com.voxopus.chiwiserver.encryption.Hasher;
 import com.voxopus.chiwiserver.model.user.AuthToken;
 import com.voxopus.chiwiserver.model.user.User;
@@ -29,7 +27,6 @@ public class UserService {
     public Checker<UserCreatedResponseData> createUser(UserRequestData data){
         String username = data.getUsername();
         String password = data.getPassword();
-        String saltIv = data.getSalt_iv();
 
         if(usernameUsed(username)){
             return Checker.fail("username is unnavailable");
@@ -39,12 +36,9 @@ public class UserService {
         String hashedPassword;
 
         try {
-            Decryptor decryptor = EncryptionFactory.INSTANCE.getDecryptor(saltIv);
-            String decryptedPassword = decryptor.decrypt(password);
-
             Hasher hasher = new Hasher();
             hashSalt = hasher.getSalt();
-            hashedPassword = hasher.hash(decryptedPassword);
+            hashedPassword = hasher.hash(password);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -77,12 +71,8 @@ public class UserService {
 
         String hashedPassword;
         try {
-            Decryptor decryptor = 
-                EncryptionFactory.INSTANCE.getDecryptor(data.getSalt_iv());
-            String decryptedPassword = decryptor.decrypt(data.getPassword());
-
             Hasher hasher = new Hasher(user.get().getSalt());
-            hashedPassword = hasher.hash(decryptedPassword);
+            hashedPassword = hasher.hash(data.getPassword());
         } catch (Exception e) {
             e.printStackTrace();
             return Checker.fail(e, "an error occured");
