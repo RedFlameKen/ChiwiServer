@@ -1,5 +1,7 @@
 package com.voxopus.chiwiserver.service.user;
 
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.Date;
 import java.util.Optional;
 
@@ -10,9 +12,12 @@ import com.voxopus.chiwiserver.encryption.Hasher;
 import com.voxopus.chiwiserver.model.user.AuthToken;
 import com.voxopus.chiwiserver.model.user.User;
 import com.voxopus.chiwiserver.repository.user.UserRepository;
+import com.voxopus.chiwiserver.request.user.UserReloginData;
 import com.voxopus.chiwiserver.request.user.UserRequestData;
+import com.voxopus.chiwiserver.response.user.AuthTokenResponse;
 import com.voxopus.chiwiserver.response.user.UserCreatedResponseData;
 import com.voxopus.chiwiserver.response.user.UserLoginResponseData;
+import com.voxopus.chiwiserver.util.AuthTokenGenerator;
 import com.voxopus.chiwiserver.util.Checker;
 
 @Service
@@ -61,6 +66,58 @@ public class UserService {
                 .build());
     }
 
+    public Checker<UserLoginResponseData> relogin(UserReloginData data){
+        if(data.getAuth_token() == null || data.getAuth_token().isEmpty()){
+            return Checker.fail("invalid token");
+        }
+
+        Optional<User> foundUser = 
+            userRepository.findByUsername(data.getUsername());
+        System.out.printf("received username: %s\n", data.getUsername());
+        if(!foundUser.isPresent()){
+            return Checker.fail("user not found");
+        }
+
+        AuthToken userToken = foundUser.get().getAuthToken();
+        if(userToken == null){
+            return Checker.fail("invalid token");
+        }
+
+        Hasher hasher = new Hasher(userToken.getSalt());
+        String rehash;
+        try {
+            rehash = hasher.hash(data.getAuth_token());
+        } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            return Checker.fail("an error occured");
+        }
+
+        if(!userToken.getToken().equals(rehash)){
+            return Checker.fail("invalid token");
+        }
+
+        foundUser.get().setAuthToken(null);
+        userRepository.save(foundUser.get());
+
+        Checker<AuthTokenResponse> newToken = 
+            authTokenService.generateAuthToken(foundUser.get().getId());
+
+        if(!newToken.isOk())
+            if(newToken.getException() != null)
+                return Checker.fail(newToken.getException(), "an error occured");
+            else
+                return Checker.fail("failed to generate token");
+
+        return Checker.ok("successfully logged in", 
+                UserLoginResponseData.builder()
+                .user_id(foundUser.get().getId())
+                .username(foundUser.get().getUsername())
+                .auth_token(newToken.get().getToken())
+                .date_logged_in(new Date())
+                .build());
+
+    }
+
     public Checker<UserLoginResponseData> login(UserRequestData data){
         Optional<User> user = 
             userRepository.findByUsername(data.getUsername());
@@ -86,25 +143,28 @@ public class UserService {
 
         Checker<AuthToken> tokenCheck = 
             authTokenService.getAuthToken(user.get().getId());
-        if(!tokenCheck.isOk()){
-            tokenCheck = 
-                authTokenService.generateAuthToken(user.get().getId());
-
-            if(!tokenCheck.isOk()){
-                if(tokenCheck.getException() != null)
-                    return Checker.fail(tokenCheck.getException(), 
-                            tokenCheck.getMessage());
-                else
-                    return Checker.fail(tokenCheck.getMessage());
-            }
+        if(tokenCheck.isOk()){
+            user.get().setAuthToken(null);
+            userRepository.save(user.get());
         }
+
+        Checker<AuthTokenResponse> newToken = 
+            authTokenService.generateAuthToken(user.get().getId());
+
+        if(!newToken.isOk())
+            if(newToken.getException() != null)
+                return Checker.fail(newToken.getException(), 
+                        newToken.getMessage());
+            else
+                return Checker.fail(newToken.getMessage());
+
 
         return Checker.ok("successfully logged in",
                 UserLoginResponseData.builder()
                 .user_id(user.get().getId())
                 .username(data.getUsername())
                 .date_logged_in(new Date())
-                .auth_token(tokenCheck.get().getToken())
+                .auth_token(newToken.get().getToken())
                 .build());
     }
 

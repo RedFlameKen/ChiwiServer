@@ -1,7 +1,6 @@
 package com.voxopus.chiwiserver.service.user;
 
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Calendar;
 import java.util.Optional;
@@ -14,6 +13,8 @@ import com.voxopus.chiwiserver.model.user.AuthToken;
 import com.voxopus.chiwiserver.model.user.User;
 import com.voxopus.chiwiserver.repository.user.AuthTokenRepository;
 import com.voxopus.chiwiserver.repository.user.UserRepository;
+import com.voxopus.chiwiserver.response.user.AuthTokenResponse;
+import com.voxopus.chiwiserver.util.AuthTokenGenerator;
 import com.voxopus.chiwiserver.util.Checker;
 
 @Service
@@ -27,20 +28,19 @@ public class AuthTokenService {
     @Autowired
     private UserRepository userRepository;
     
-    public Checker<AuthToken> generateAuthToken(Long userId){
+    public Checker<AuthTokenResponse> generateAuthToken(Long userId){
         Optional<User> user = userRepository.findById(userId);
 
         if(!user.isPresent())
             return Checker.fail("user not found");
 
-        SecureRandom rand = new SecureRandom();
-        int num = rand.nextInt(256);
-
-        Hasher hasher = new Hasher();
-
-        String key;
+        String token = AuthTokenGenerator.generate();
+        String hashedToken;
+        String salt;
         try {
-            key = hasher.hash(String.valueOf(num));
+            Hasher hasher = new Hasher();
+            salt = hasher.getSalt();
+            hashedToken = hasher.hash(token);
         } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
             e.printStackTrace();
             return Checker.fail(e, "failed to generate token");
@@ -49,15 +49,17 @@ public class AuthTokenService {
         Calendar expirationDate = Calendar.getInstance();
         expirationDate.add(Calendar.DATE, TOKEN_VALIDITY_PEROID);
 
-        AuthToken token = AuthToken.builder()
-            .token(key)
+        AuthToken authToken = AuthToken.builder()
+            .token(hashedToken)
             .user(user.get())
+            .salt(salt)
             .expiration_date(expirationDate)
             .build();
 
-        authTokenRepository.save(token);
+        authTokenRepository.save(authToken);
 
-        return Checker.ok("successfully generated token", token);
+        return Checker.ok("successfully generated token", 
+                new AuthTokenResponse(token));
     }
 
     public Checker<AuthToken> getAuthToken(Long userId){

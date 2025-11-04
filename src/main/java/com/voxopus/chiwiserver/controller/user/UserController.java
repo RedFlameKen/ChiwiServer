@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.voxopus.chiwiserver.model.user.User;
+import com.voxopus.chiwiserver.request.user.UserReloginData;
 import com.voxopus.chiwiserver.request.user.UserRequestData;
 import com.voxopus.chiwiserver.response.ResponseData;
 import com.voxopus.chiwiserver.response.user.UserCreatedResponseData;
@@ -60,6 +61,30 @@ public class UserController {
         ResponseData<?> response;
 
         Checker<UserLoginResponseData> checker = userService.login(userRequestData);
+
+        if(!checker.isOk()){
+            if(checker.getException() != null)
+                status = HttpStatus.INTERNAL_SERVER_ERROR;
+            else
+                status = HttpStatus.UNAUTHORIZED;
+        } else
+            status = HttpStatus.OK;
+
+        response = ResponseData.builder()
+            .status_code(status.value())
+            .message(checker.getMessage())
+            .data(checker.get())
+            .build();
+
+        return new ResponseEntity<>(response, status);
+    }
+
+    @PostMapping("/login/auth")
+    public ResponseEntity<?> relogin(@RequestBody UserReloginData userRequestData){
+        HttpStatus status;
+        ResponseData<?> response;
+
+        Checker<UserLoginResponseData> checker = userService.relogin(userRequestData);
 
         if(!checker.isOk()){
             if(checker.getException() != null)
@@ -135,18 +160,6 @@ public class UserController {
             .build();
 
         return new ResponseEntity<>(response, status);
-    }
-
-    @GetMapping("/test")
-    public ResponseEntity<?> testMapping(){
-        System.out.printf("accessed\n");
-        return ResponseEntity.ok("test mapping reached");
-    }
-
-    @PostMapping("/test")
-    public ResponseEntity<?> testMappingPost(@RequestBody String data){
-        System.out.printf("test mapping reached, data: " + data + "\n");
-        return ResponseEntity.ok("test mapping reached, data: " + data);
     }
 
 }

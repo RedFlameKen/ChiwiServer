@@ -29,6 +29,9 @@ public class AuthToken {
     @Column(unique = true)
     private String token;
 
+    @Column
+    private String salt;
+
     @Temporal(TemporalType.TIMESTAMP)
     @Column
     private Calendar expiration_date;

@@ -5,10 +5,9 @@ import lombok.Data;
 
 @Data
 @Builder
-public class UserRequestData {
+public class UserReloginData {
 
     String username;
-
-    String password;
+    String auth_token;
 
 }
