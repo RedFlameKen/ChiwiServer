@@ -12,12 +12,10 @@ import com.voxopus.chiwiserver.encryption.Hasher;
 import com.voxopus.chiwiserver.model.user.AuthToken;
 import com.voxopus.chiwiserver.model.user.User;
 import com.voxopus.chiwiserver.repository.user.UserRepository;
-import com.voxopus.chiwiserver.request.user.UserReloginData;
 import com.voxopus.chiwiserver.request.user.UserRequestData;
 import com.voxopus.chiwiserver.response.user.AuthTokenResponse;
 import com.voxopus.chiwiserver.response.user.UserCreatedResponseData;
 import com.voxopus.chiwiserver.response.user.UserLoginResponseData;
-import com.voxopus.chiwiserver.util.AuthTokenGenerator;
 import com.voxopus.chiwiserver.util.Checker;
 
 @Service
@@ -66,14 +64,14 @@ public class UserService {
                 .build());
     }
 
-    public Checker<UserLoginResponseData> relogin(UserReloginData data){
-        if(data.getAuth_token() == null || data.getAuth_token().isEmpty()){
+    public Checker<UserLoginResponseData> relogin(String auth_token, String username){
+        if(auth_token == null || username.isEmpty()){
             return Checker.fail("invalid token");
         }
 
         Optional<User> foundUser = 
-            userRepository.findByUsername(data.getUsername());
-        System.out.printf("received username: %s\n", data.getUsername());
+            userRepository.findByUsername(username);
+        System.out.printf("received username: %s\n", username);
         if(!foundUser.isPresent()){
             return Checker.fail("user not found");
         }
@@ -86,7 +84,7 @@ public class UserService {
         Hasher hasher = new Hasher(userToken.getSalt());
         String rehash;
         try {
-            rehash = hasher.hash(data.getAuth_token());
+            rehash = hasher.hash(auth_token);
         } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
             e.printStackTrace();
             return Checker.fail("an error occured");

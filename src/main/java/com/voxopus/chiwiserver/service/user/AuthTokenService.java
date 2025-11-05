@@ -99,6 +99,33 @@ public class AuthTokenService {
                 token.get().getUser());
     }
 
+    public Checker<User> checkUserToken(String username, String token){
+        Optional<User> user = userRepository.findByUsername(username);
+        if(!user.isPresent()){
+            return Checker.fail("user not found");
+        }
+
+        AuthToken userToken = user.get().getAuthToken();
+        if(userToken == null){
+            return Checker.fail("invalid token");
+        }
+
+        Hasher hasher = new Hasher(userToken.getSalt());
+        String hashedToken;
+        try {
+            hashedToken = hasher.hash(token);
+        } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            return Checker.fail(e, "an error occured");
+        }
+
+        if(!userToken.getToken().equals(hashedToken)){
+            return Checker.fail("invalid token");
+        }
+
+        return Checker.ok("token is valid", user.get());
+    }
+
     private boolean isTokenExpired(AuthToken token){
         Calendar curDate = Calendar.getInstance();
         return token.getExpiration_date().compareTo(curDate) <= 0;

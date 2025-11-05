@@ -19,12 +19,13 @@ import com.voxopus.chiwiserver.response.ResponseData;
 import com.voxopus.chiwiserver.service.reviewer.ReviewerService;
 import com.voxopus.chiwiserver.service.user.AuthTokenService;
 import com.voxopus.chiwiserver.util.Checker;
-import com.voxopus.chiwiserver.util.HeaderUtil;
+import com.voxopus.chiwiserver.util.CookieUtil;
 
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
-@RequestMapping("/reviewers")
+@RequestMapping("/reviewer")
 public class ReviewerController {
 
     @Autowired
@@ -36,13 +37,24 @@ public class ReviewerController {
     @PostMapping("create")
     public ResponseEntity<?> createReviewer(@RequestBody CreateReviewerRequestData body,
             HttpServletRequest request) {
-        String token = 
-            HeaderUtil.extractAuthToken(request.getHeader("Authorization"));
-
         HttpStatus status;
         ResponseData<?> response;
 
-        Checker<User> user = authTokenService.findUserByAuthToken(token);
+        Cookie tokenCookie = CookieUtil.getCookie(request.getCookies(), "auth_token");
+        Cookie usernameCookie = CookieUtil.getCookie(request.getCookies(), "username");
+        if(tokenCookie == null || usernameCookie == null){
+            status = HttpStatus.BAD_REQUEST;
+            response = ResponseData.builder()
+                .status_code(status.value())
+                .message("missing auth token")
+                .data(null)
+                .build();
+            return new ResponseEntity<>(response, status);
+        }
+
+        String authToken = tokenCookie.getValue();
+        String username = usernameCookie.getValue();
+        Checker<User> user = authTokenService.checkUserToken(username, authToken);
         if(!user.isOk()){
             status = HttpStatus.UNAUTHORIZED;
             response = createResponseData(status, user);
@@ -64,13 +76,24 @@ public class ReviewerController {
 
     @GetMapping("list")
     public ResponseEntity<?> listReviewers(HttpServletRequest request) {
-        String token = 
-            HeaderUtil.extractAuthToken(request.getHeader("Authorization"));
-
         ResponseData<?> response;
         HttpStatus status;
 
-        Checker<User> user = authTokenService.findUserByAuthToken(token);
+        Cookie tokenCookie = CookieUtil.getCookie(request.getCookies(), "auth_token");
+        Cookie usernameCookie = CookieUtil.getCookie(request.getCookies(), "username");
+        if(tokenCookie == null || usernameCookie == null){
+            status = HttpStatus.BAD_REQUEST;
+            response = ResponseData.builder()
+                .status_code(status.value())
+                .message("missing auth token")
+                .data(null)
+                .build();
+            return new ResponseEntity<>(response, status);
+        }
+
+        String authToken = tokenCookie.getValue();
+        String username = usernameCookie.getValue();
+        Checker<User> user = authTokenService.checkUserToken(username, authToken);
         if(!user.isOk()){
             status = HttpStatus.UNAUTHORIZED;
             response = createResponseData(status, user);
@@ -95,13 +118,24 @@ public class ReviewerController {
     public ResponseEntity<?> createFlashcard(@PathVariable("reviewer_id") Long reviewerId,
             @RequestBody CreateFlashcardRequestData body,
             HttpServletRequest request) {
-        String token = 
-            HeaderUtil.extractAuthToken(request.getHeader("Authorization"));
-
         ResponseData<?> response;
         HttpStatus status;
 
-        Checker<User> user = authTokenService.findUserByAuthToken(token);
+        Cookie tokenCookie = CookieUtil.getCookie(request.getCookies(), "auth_token");
+        Cookie usernameCookie = CookieUtil.getCookie(request.getCookies(), "username");
+        if(tokenCookie == null || usernameCookie == null){
+            status = HttpStatus.BAD_REQUEST;
+            response = ResponseData.builder()
+                .status_code(status.value())
+                .message("missing auth token")
+                .data(null)
+                .build();
+            return new ResponseEntity<>(response, status);
+        }
+
+        String authToken = tokenCookie.getValue();
+        String username = usernameCookie.getValue();
+        Checker<User> user = authTokenService.checkUserToken(username, authToken);
         if(!user.isOk()){
             status = HttpStatus.UNAUTHORIZED;
             response = createResponseData(status, user);
@@ -148,13 +182,24 @@ public class ReviewerController {
 
     @GetMapping("{reviewer_id}/flashcard")
     public ResponseEntity<?> listFlashcards(@PathVariable("reviewer_id") Long reviewerId, HttpServletRequest request){
-        String token = 
-            HeaderUtil.extractAuthToken(request.getHeader("Authorization"));
-
         ResponseData<?> response;
         HttpStatus status;
 
-        Checker<User> user = authTokenService.findUserByAuthToken(token);
+        Cookie tokenCookie = CookieUtil.getCookie(request.getCookies(), "auth_token");
+        Cookie usernameCookie = CookieUtil.getCookie(request.getCookies(), "username");
+        if(tokenCookie == null || usernameCookie == null){
+            status = HttpStatus.BAD_REQUEST;
+            response = ResponseData.builder()
+                .status_code(status.value())
+                .message("missing auth token")
+                .data(null)
+                .build();
+            return new ResponseEntity<>(response, status);
+        }
+
+        String authToken = tokenCookie.getValue();
+        String username = usernameCookie.getValue();
+        Checker<User> user = authTokenService.checkUserToken(username, authToken);
         if(!user.isOk()){
             status = HttpStatus.UNAUTHORIZED;
             response = createResponseData(status, user);
@@ -199,13 +244,25 @@ public class ReviewerController {
             @RequestBody CreateAnswerRequestData body,
             HttpServletRequest request
             ){
-        String token = 
-            HeaderUtil.extractAuthToken(request.getHeader("Authorization"));
 
         ResponseData<?> response;
         HttpStatus status;
 
-        Checker<User> user = authTokenService.findUserByAuthToken(token);
+        Cookie tokenCookie = CookieUtil.getCookie(request.getCookies(), "auth_token");
+        Cookie usernameCookie = CookieUtil.getCookie(request.getCookies(), "username");
+        if(tokenCookie == null || usernameCookie == null){
+            status = HttpStatus.BAD_REQUEST;
+            response = ResponseData.builder()
+                .status_code(status.value())
+                .message("missing auth token")
+                .data(null)
+                .build();
+            return new ResponseEntity<>(response, status);
+        }
+
+        String authToken = tokenCookie.getValue();
+        String username = usernameCookie.getValue();
+        Checker<User> user = authTokenService.checkUserToken(username, authToken);
         if(!user.isOk()){
             status = HttpStatus.UNAUTHORIZED;
             response = createResponseData(status, user);
@@ -249,13 +306,24 @@ public class ReviewerController {
             @PathVariable("flashcard_id") Long flashcardId,
             HttpServletRequest request
             ){
-        String token = 
-            HeaderUtil.extractAuthToken(request.getHeader("Authorization"));
-
         ResponseData<?> response;
         HttpStatus status;
 
-        Checker<User> user = authTokenService.findUserByAuthToken(token);
+        Cookie tokenCookie = CookieUtil.getCookie(request.getCookies(), "auth_token");
+        Cookie usernameCookie = CookieUtil.getCookie(request.getCookies(), "username");
+        if(tokenCookie == null || usernameCookie == null){
+            status = HttpStatus.BAD_REQUEST;
+            response = ResponseData.builder()
+                .status_code(status.value())
+                .message("missing auth token")
+                .data(null)
+                .build();
+            return new ResponseEntity<>(response, status);
+        }
+
+        String authToken = tokenCookie.getValue();
+        String username = usernameCookie.getValue();
+        Checker<User> user = authTokenService.checkUserToken(username, authToken);
         if(!user.isOk()){
             status = HttpStatus.UNAUTHORIZED;
             response = createResponseData(status, user);
