@@ -69,29 +69,9 @@ public class UserService {
             return Checker.fail("invalid token");
         }
 
-        Optional<User> foundUser = 
-            userRepository.findByUsername(username);
-        System.out.printf("received username: %s\n", username);
-        if(!foundUser.isPresent()){
-            return Checker.fail("user not found");
-        }
-
-        AuthToken userToken = foundUser.get().getAuthToken();
-        if(userToken == null){
-            return Checker.fail("invalid token");
-        }
-
-        Hasher hasher = new Hasher(userToken.getSalt());
-        String rehash;
-        try {
-            rehash = hasher.hash(auth_token);
-        } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
-            e.printStackTrace();
-            return Checker.fail("an error occured");
-        }
-
-        if(!userToken.getToken().equals(rehash)){
-            return Checker.fail("invalid token");
+        Checker<User> foundUser = authTokenService.checkUserToken(username, auth_token);
+        if(!foundUser.isOk()){
+            return Checker.fail(foundUser.getException(), foundUser.getMessage());
         }
 
         foundUser.get().setAuthToken(null);

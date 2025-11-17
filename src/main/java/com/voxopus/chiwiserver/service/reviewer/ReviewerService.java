@@ -55,7 +55,7 @@ public class ReviewerService {
 
         Date cur_date = new Date();
         Reviewer reviewer = Reviewer.builder()
-                .name(data.getReviewer_name())
+                .name(data.getName())
                 .user(user.get())
                 .subject(data.getSubject())
                 .date_created(cur_date)
@@ -86,6 +86,8 @@ public class ReviewerService {
                     .id(reviewer.getId())
                     .name(reviewer.getName())
                     .subject(reviewer.getSubject())
+                    .date_created(reviewer.getDate_created())
+                    .date_modified(reviewer.getDate_modified())
                     .flashcards_count(reviewer.getFlashcards().size())
                     .build());
         });
