@@ -83,6 +83,7 @@ public class UserController {
                 ResponseCookie.from("auth_token", checker.get().getAuth_token())
                 .httpOnly(true)
                 .secure(true)
+                .path("/")
                 .sameSite("None")
                 .maxAge(7 * 24 * 3600)
                 .build();
@@ -91,6 +92,7 @@ public class UserController {
                 ResponseCookie.from("username", checker.get().getUsername())
                 .httpOnly(true)
                 .secure(true)
+                .path("/")
                 .sameSite("None")
                 .maxAge(7 * 24 * 3600)
                 .build();
@@ -146,6 +148,7 @@ public class UserController {
                 ResponseCookie.from("auth_token", checker.get().getAuth_token())
                 .httpOnly(true)
                 .secure(true)
+                .path("/")
                 .sameSite("None")
                 .maxAge(7 * 24 * 3600)
                 .build();
@@ -153,6 +156,7 @@ public class UserController {
                 ResponseCookie.from("username", checker.get().getUsername())
                 .httpOnly(true)
                 .secure(true)
+                .path("/")
                 .sameSite("None")
                 .maxAge(7 * 24 * 3600)
                 .build();
