@@ -1,5 +1,7 @@
 package com.voxopus.chiwiserver.response.reviewer;
 
+import java.util.Date;
+
 import lombok.Builder;
 import lombok.Data;
 
@@ -7,9 +9,11 @@ import lombok.Data;
 @Builder
 public class ReviewerResponseData {
 
-    Long reviewer_id;
-    String reviewer_name;
+    Long id;
+    String name;
     String subject;
-    Long user_id;
+    Date date_created;
+    Date date_modified;
+    int flashcards_count;
     
 }

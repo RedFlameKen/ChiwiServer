@@ -5,11 +5,20 @@ public class Checker<T> {
     private T data;
     private String message;
     private Exception exception;
+    private boolean isOk;
 
-    public Checker(T data){
+    private Checker(T data){
         this.data = data;
         this.message = null;
         this.exception = null;
+        this.isOk = false;
+    }
+
+    private Checker(T data, boolean isOk){
+        this.data = data;
+        this.message = null;
+        this.exception = null;
+        this.isOk = isOk;
     }
 
     public void setMessage(String message){
@@ -33,7 +42,7 @@ public class Checker<T> {
     }
 
     public boolean isOk(){
-        return data != null && exception == null;
+        return isOk;
     }
 
     public static <T> Checker<T> fail(String message){
@@ -56,13 +65,13 @@ public class Checker<T> {
     }
 
     public static <T> Checker<T> ok(String message, T data){
-        Checker<T> checker = new Checker<T>(data);
+        Checker<T> checker = new Checker<T>(data, true);
         checker.setMessage(message);
         return checker;
     }
     
     public static <T> Checker<T> ok(T data){
-        return new Checker<T>(data);
+        return new Checker<T>(data, true);
     }
     
 }

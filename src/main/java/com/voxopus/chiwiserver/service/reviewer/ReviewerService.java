@@ -21,10 +21,9 @@ import com.voxopus.chiwiserver.repository.reviewer.ReviewerRepository;
 import com.voxopus.chiwiserver.repository.user.UserRepository;
 import com.voxopus.chiwiserver.request.reviewer.CreateAnswerRequestData;
 import com.voxopus.chiwiserver.request.reviewer.CreateFlashcardRequestData;
-import com.voxopus.chiwiserver.request.reviewer.CreateReviewerRequestData;
+import com.voxopus.chiwiserver.request.reviewer.ReviewerRequestData;
 import com.voxopus.chiwiserver.response.reviewer.AnswerResponseData;
 import com.voxopus.chiwiserver.response.reviewer.FlashcardResponseData;
-import com.voxopus.chiwiserver.response.reviewer.ListReviewersResponseData;
 import com.voxopus.chiwiserver.response.reviewer.ReviewerResponseData;
 import com.voxopus.chiwiserver.util.Checker;
 
@@ -46,7 +45,7 @@ public class ReviewerService {
     @Autowired
     private UserRepository userRepository;
 
-    public Checker<ReviewerResponseData> addReviewer(Long userId, CreateReviewerRequestData data) {
+    public Checker<ReviewerResponseData> addReviewer(Long userId, ReviewerRequestData data) {
         Optional<User> user = userRepository.findById(userId);
 
         if (!user.isPresent()) {
@@ -65,14 +64,49 @@ public class ReviewerService {
         reviewerRepository.save(reviewer);
         return Checker.ok("reviewer successfully created",
                 ReviewerResponseData.builder()
-                        .reviewer_id(reviewer.getId())
-                        .reviewer_name(reviewer.getName())
+                        .id(reviewer.getId())
+                        .name(reviewer.getName())
                         .subject(reviewer.getSubject())
-                        .user_id(reviewer.getUser().getId())
+                        .date_created(reviewer.getDate_created())
+                        .date_modified(reviewer.getDate_modified())
+                        .flashcards_count(0)
                         .build());
     }
 
-    public Checker<List<ListReviewersResponseData>> getReviewersByUserId(Long userId) {
+    public Checker<?> deleteReviewer(Long reviewerId){
+        Optional<Reviewer> reviewer = reviewerRepository.findById(reviewerId);
+
+        if(!reviewer.isPresent()){
+            return Checker.fail("reviewer not found");
+        }
+
+        reviewerRepository.delete(reviewer.get());
+        return Checker.ok("reviewer deleted", null);
+    }
+
+    public Checker<ReviewerResponseData> updateReviewer(Long reviewerId, ReviewerRequestData data){
+        Optional<Reviewer> reviewer = reviewerRepository.findById(reviewerId);
+
+        if(!reviewer.isPresent()){
+            return Checker.fail("reviewer not found");
+        }
+
+        reviewer.get().setName(data.getName());
+        reviewer.get().setSubject(data.getSubject());
+
+        reviewerRepository.save(reviewer.get());
+
+        return Checker.ok("reviewer updated", ReviewerResponseData.builder()
+                .id(reviewer.get().getId())
+                .name(reviewer.get().getName())
+                .subject(reviewer.get().getSubject())
+                .date_created(reviewer.get().getDate_created())
+                .date_modified(reviewer.get().getDate_modified())
+                .flashcards_count(reviewer.get().getFlashcards().size())
+                .build());
+    }
+
+    public Checker<List<ReviewerResponseData>> getReviewersByUserId(Long userId) {
         Optional<User> user = userRepository.findById(userId);
 
         if (!user.isPresent()) {
@@ -80,9 +114,9 @@ public class ReviewerService {
         }
 
         List<Reviewer> reviewers = reviewerRepository.findByUserId(userId);
-        ArrayList<ListReviewersResponseData> responseData = new ArrayList<>();
+        ArrayList<ReviewerResponseData> responseData = new ArrayList<>();
         reviewers.forEach(reviewer -> {
-            responseData.add(ListReviewersResponseData.builder()
+            responseData.add(ReviewerResponseData.builder()
                     .id(reviewer.getId())
                     .name(reviewer.getName())
                     .subject(reviewer.getSubject())
@@ -118,7 +152,7 @@ public class ReviewerService {
                 .timeStarted(new Date())
                 .build();
 
-        return new Checker<>(session);
+        return Checker.ok(session);
     }
 
     public Checker<?> createFlashcard(Reviewer reviewer, CreateFlashcardRequestData data) {

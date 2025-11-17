@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class CreateReviewerRequestData {
+public class ReviewerRequestData {
 
     String name;
     String subject;
