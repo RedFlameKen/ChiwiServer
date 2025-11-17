@@ -1,5 +1,7 @@
 package com.voxopus.chiwiserver.controller.reviewer;
 
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.voxopus.chiwiserver.model.reviewer.Reviewer;
@@ -77,7 +80,7 @@ public class ReviewerController {
     }
 
     @GetMapping("list")
-    public ResponseEntity<?> listReviewers(HttpServletRequest request) {
+    public ResponseEntity<?> listReviewers(@RequestParam("query") Optional<String> query, HttpServletRequest request) {
         ResponseData<?> response;
         HttpStatus status;
 
@@ -102,7 +105,7 @@ public class ReviewerController {
             return new ResponseEntity<>(response, status);
         }
 
-        Checker<?> checker = reviewerService.getReviewersByUserId(user.get().getId());
+        Checker<?> checker = reviewerService.getReviewersByUserId(user.get().getId(), query.orElse(null));
 
         status = checker.isOk() ? HttpStatus.OK : HttpStatus.NOT_FOUND;
 

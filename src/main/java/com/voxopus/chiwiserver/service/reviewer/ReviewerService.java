@@ -106,14 +106,17 @@ public class ReviewerService {
                 .build());
     }
 
-    public Checker<List<ReviewerResponseData>> getReviewersByUserId(Long userId) {
+    public Checker<List<ReviewerResponseData>> getReviewersByUserId(Long userId, String query) {
         Optional<User> user = userRepository.findById(userId);
 
         if (!user.isPresent()) {
             return Checker.fail("no user with the given id was found");
         }
 
-        List<Reviewer> reviewers = reviewerRepository.findByUserId(userId);
+        List<Reviewer> reviewers = query == null ?
+            reviewerRepository.findByUserId(userId) :
+            reviewerRepository.findByUserIdAndNameContainingIgnoreCase(userId, query);
+
         ArrayList<ReviewerResponseData> responseData = new ArrayList<>();
         reviewers.forEach(reviewer -> {
             responseData.add(ReviewerResponseData.builder()

@@ -9,5 +9,7 @@ import com.voxopus.chiwiserver.model.reviewer.Reviewer;
 public interface ReviewerRepository extends JpaRepository<Reviewer, Long>{
 
     List<Reviewer> findByUserId(Long id);
+
+    List<Reviewer> findByUserIdAndNameContainingIgnoreCase(Long id, String keyword);
     
 }
