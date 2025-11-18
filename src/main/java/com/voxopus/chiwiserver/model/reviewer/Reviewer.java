@@ -63,4 +63,7 @@ public class Reviewer {
     @OneToOne(mappedBy = "reviewer")
     private ReviewSession reviewSession;
     
+    @OneToOne(mappedBy = "reviewer", cascade = CascadeType.ALL)
+    private ReviewerSetupSession reviewSetupSession;
+    
 }
