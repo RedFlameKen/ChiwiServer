@@ -1,9 +1,10 @@
-package com.voxopus.chiwiserver.model.reviewer;
+package com.voxopus.chiwiserver.model.setup_session;
 
 import java.util.Calendar;
-import java.util.Date;
 
 import org.hibernate.annotations.CreationTimestamp;
+
+import com.voxopus.chiwiserver.model.reviewer.Reviewer;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;

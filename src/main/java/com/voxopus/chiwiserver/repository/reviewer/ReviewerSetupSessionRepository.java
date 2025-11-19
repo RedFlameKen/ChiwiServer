@@ -4,7 +4,7 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.voxopus.chiwiserver.model.reviewer.ReviewerSetupSession;
+import com.voxopus.chiwiserver.model.setup_session.ReviewerSetupSession;
 
 public interface ReviewerSetupSessionRepository extends JpaRepository<ReviewerSetupSession, Long>{
 
