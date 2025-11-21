@@ -8,6 +8,7 @@ public class SessionStateHelper {
         switch (confirm) {
             case "yes":
             case "yup":
+            case "yep":
             case "yuh":
             case "yeah":
                 return ConfirmEnum.YES;
