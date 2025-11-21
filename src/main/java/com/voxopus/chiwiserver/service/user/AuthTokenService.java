@@ -135,6 +135,7 @@ public class AuthTokenService {
         token.getUser().setAuthToken(null);
         userRepository.save(token.getUser());
         authTokenRepository.delete(token);
+        authTokenRepository.flush();
     }
 
 }

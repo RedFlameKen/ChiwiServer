@@ -152,6 +152,7 @@ public class UserService {
         }
 
         userRepository.delete(user);
+        userRepository.flush();
     }
 
     public void logout(User user){

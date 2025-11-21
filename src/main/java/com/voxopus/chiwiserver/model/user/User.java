@@ -7,6 +7,7 @@ import org.hibernate.annotations.CreationTimestamp;
 
 import com.voxopus.chiwiserver.model.reviewer.ReviewSession;
 import com.voxopus.chiwiserver.model.reviewer.Reviewer;
+import com.voxopus.chiwiserver.model.setup_session.ReviewerSetupSession;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -62,4 +63,7 @@ public class User {
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private AuthToken authToken;
     
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private ReviewerSetupSession reviewerSetupSession;
+
 }

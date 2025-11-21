@@ -5,8 +5,12 @@ import java.util.Calendar;
 import org.hibernate.annotations.CreationTimestamp;
 
 import com.voxopus.chiwiserver.model.reviewer.Reviewer;
+import com.voxopus.chiwiserver.model.user.User;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
@@ -25,15 +29,20 @@ import lombok.Setter;
 @Getter
 @Setter
 @Builder
-@Table(name = "review_setup_sessions")
+@Table(name = "reviewer_setup_sessions")
 public class ReviewerSetupSession {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
     @OneToOne
     @JoinColumn(name="reviewer_id")
     Reviewer reviewer;
+
+    @OneToOne
+    @JoinColumn(name="user_id")
+    User user;
 
     @Temporal(TemporalType.TIMESTAMP)
     @CreationTimestamp
@@ -42,4 +51,10 @@ public class ReviewerSetupSession {
     @Temporal(TemporalType.TIMESTAMP)
     Calendar dateUsed;
     
+    @OneToOne(mappedBy = "reviewerSetupSession", cascade = CascadeType.ALL, orphanRemoval = true)
+    CreateFlashcardSession createFlashcardSession;
+
+    @OneToOne(mappedBy = "reviewerSetupSession", cascade = CascadeType.ALL, orphanRemoval = true)
+    SetupStep setupStep;
+
 }

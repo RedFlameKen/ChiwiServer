@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
@@ -37,7 +38,7 @@ public class ReviewerSetupController {
     private ReviewerSetupSessionService reviewerSetupSessionService;
 
     @PostMapping("start")
-    public ResponseEntity<?> startMapping(ReviewerSetupRequestData data, HttpServletRequest request){
+    public ResponseEntity<?> startMapping(@RequestBody ReviewerSetupRequestData data, HttpServletRequest request){
         ResponseData<?> response;
         HttpStatus status;
 
@@ -63,7 +64,7 @@ public class ReviewerSetupController {
         }
 
         Checker<?> checker = reviewerSetupSessionService
-            .startSession(user.get().getId(), data.getReviewer_id());
+            .startSession(user.get(), data.getReviewer_id());
 
         if(!checker.isOk())
             if(checker.getException() != null)
@@ -103,7 +104,7 @@ public class ReviewerSetupController {
             return new ResponseEntity<>(response, status);
         }
 
-        Checker<?> transcription = reviewerSetupSessionService.processCommand(file.getBytes());
+        Checker<?> transcription = reviewerSetupSessionService.processCommand(user.get().getId(), file.getBytes());
 
         status = transcription.isOk() ? HttpStatus.OK : HttpStatus.BAD_REQUEST;
         response = createResponseData(status, transcription);

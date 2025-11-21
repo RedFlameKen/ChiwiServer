@@ -58,13 +58,13 @@ public class Reviewer {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @OneToMany(mappedBy = "reviewer", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "reviewer", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Flashcard> flashcards;
 
     @OneToOne(mappedBy = "reviewer")
     private ReviewSession reviewSession;
     
-    @OneToOne(mappedBy = "reviewer", cascade = CascadeType.ALL)
-    private ReviewerSetupSession reviewSetupSession;
+    @OneToOne(mappedBy = "reviewer", cascade = CascadeType.ALL, orphanRemoval = true)
+    private ReviewerSetupSession reviewerSetupSession;
     
 }
