@@ -8,6 +8,7 @@ import static com.voxopus.chiwiserver.enums.SetupCommandType.LIST;
 import static com.voxopus.chiwiserver.enums.SetupCommandType.MISUNDERSTOOD;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Optional;
@@ -32,12 +33,14 @@ import com.voxopus.chiwiserver.model.setup_session.CreateFlashcardSession;
 import com.voxopus.chiwiserver.model.setup_session.ReviewerSetupSession;
 import com.voxopus.chiwiserver.model.setup_session.SetupStep;
 import com.voxopus.chiwiserver.model.user.User;
-import com.voxopus.chiwiserver.repository.user.UserRepository;
 import com.voxopus.chiwiserver.repository.reviewer.FlashcardRepository;
 import com.voxopus.chiwiserver.repository.reviewer.ReviewerRepository;
 import com.voxopus.chiwiserver.repository.reviewer.ReviewerSetupSessionRepository;
 import com.voxopus.chiwiserver.repository.setup_session.CreateFlashcardSessionRepository;
 import com.voxopus.chiwiserver.repository.setup_session.SetupStepRepository;
+import com.voxopus.chiwiserver.repository.user.UserRepository;
+import com.voxopus.chiwiserver.response.reviewer.AnswerResponseData;
+import com.voxopus.chiwiserver.response.reviewer.FlashcardResponseData;
 import com.voxopus.chiwiserver.response.reviewer.ReviewerSetupResponseData;
 import com.voxopus.chiwiserver.response.setup_session.SetupSessionResponseData;
 import com.voxopus.chiwiserver.response.whisper.WhisperInference;
@@ -48,6 +51,7 @@ import com.voxopus.chiwiserver.util.Checker;
 public class ReviewerSetupSessionService {
 
     public static final String MISUNDERSTOOD_MESSAGE = "Sorry, I cound't understand that, woof!";
+    public static final String LIST_FLASHCARDS_MESSAGE = "Here are the flashcards in this reviewer, woof!";
     public static final String UNAVAILABLE_MESSAGE = "feature unavailable, woof!";
     public static final String HELP_MESSAGE = """
         Commands:
@@ -138,7 +142,7 @@ public class ReviewerSetupSessionService {
         return Checker.ok("command processed", response);
     }
 
-    private SetupSessionResponseData dispatchCommand(ReviewerSetupSession session, String speech, SetupCommandType commandType){
+    private SetupSessionResponseData<?> dispatchCommand(ReviewerSetupSession session, String speech, SetupCommandType commandType){
         switch (commandType) {
             // TODO: actually create more functions or entities for each command for them to do different things
             case CREATE_FLASHCARD:
@@ -146,18 +150,44 @@ public class ReviewerSetupSessionService {
             case FINISH_SETUP:
                 return finishSetupCommandProcess(session);
             case HELP:
-                return new SetupSessionResponseData(HELP_MESSAGE, commandType);
+                return new SetupSessionResponseData<>(HELP_MESSAGE, commandType);
             case LIST:
-                return new SetupSessionResponseData(UNAVAILABLE_MESSAGE, commandType);
+                return listFlashcardsCommandProcess(session);
             case MISUNDERSTOOD:
             default:
-                return new SetupSessionResponseData(MISUNDERSTOOD_MESSAGE, commandType);
+                return new SetupSessionResponseData<>(MISUNDERSTOOD_MESSAGE, commandType);
         }
     }
 
-    private SetupSessionResponseData finishSetupCommandProcess(ReviewerSetupSession session){
+    private SetupSessionResponseData<?> listFlashcardsCommandProcess(ReviewerSetupSession session){
+        List<Flashcard> flashcards = session.getReviewer().getFlashcards();
+
+        ArrayList<FlashcardResponseData> data = new ArrayList<>();
+        flashcards.forEach((flashcard) -> {
+            ArrayList<AnswerResponseData> answers = new ArrayList<>();
+            flashcard.getAnswers().forEach((answer) -> {
+                answers.add(AnswerResponseData.builder()
+                        .id(answer.getId())
+                        .answer(answer.getAnswer())
+                        .build());
+            });
+            final var responseData = FlashcardResponseData.builder()
+                .question(flashcard.getQuestion())
+                .date_created(flashcard.getDate_created())
+                .date_modified(flashcard.getDate_modified())
+                .flashcard_type(flashcard.getType().toString())
+                .flashcard_id(flashcard.getId())
+                .reviewer_id(flashcard.getReviewer().getId())
+                .answers(answers)
+                .build();
+            data.add(responseData);
+        });
+        return new SetupSessionResponseData<>(LIST_FLASHCARDS_MESSAGE, LIST, data);
+    }
+
+    private SetupSessionResponseData<?> finishSetupCommandProcess(ReviewerSetupSession session){
         deleteSetupSession(session);
-        return new SetupSessionResponseData("Alright, I cleaned it all up, woof!", FINISH_SETUP);
+        return new SetupSessionResponseData<>("Alright, I cleaned it all up, woof!", FINISH_SETUP);
     }
 
     private void deleteSetupSession(ReviewerSetupSession session){
@@ -184,7 +214,7 @@ public class ReviewerSetupSessionService {
         reviewerSetupSessionRepository.flush();
     }
 
-    private SetupSessionResponseData createFlashcardCommandProcess(ReviewerSetupSession reviewerSetupSession, String speech){
+    private SetupSessionResponseData<?> createFlashcardCommandProcess(ReviewerSetupSession reviewerSetupSession, String speech){
         CreateFlashcardSession session;
         if(reviewerSetupSession.getCreateFlashcardSession() == null){
             session = CreateFlashcardSession.builder()
@@ -237,7 +267,7 @@ public class ReviewerSetupSessionService {
                 message = MISUNDERSTOOD_MESSAGE;
                 break;
         }
-        return new SetupSessionResponseData(message, CREATE_FLASHCARD);
+        return new SetupSessionResponseData<>(message, CREATE_FLASHCARD);
     }
 
     private List<Answer> createSimpleAnswer(String answer){
