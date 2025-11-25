@@ -7,22 +7,13 @@ import static com.voxopus.chiwiserver.enums.SetupCommandType.HELP;
 import static com.voxopus.chiwiserver.enums.SetupCommandType.LIST;
 import static com.voxopus.chiwiserver.enums.SetupCommandType.MISUNDERSTOOD;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ContentDisposition;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.RestTemplate;
 
 import com.voxopus.chiwiserver.enums.FlashcardType;
 import com.voxopus.chiwiserver.enums.SetupCommandType;
@@ -33,6 +24,7 @@ import com.voxopus.chiwiserver.model.setup_session.CreateFlashcardSession;
 import com.voxopus.chiwiserver.model.setup_session.ReviewerSetupSession;
 import com.voxopus.chiwiserver.model.setup_session.SetupStep;
 import com.voxopus.chiwiserver.model.user.User;
+import com.voxopus.chiwiserver.repository.reviewer.AnswerRepository;
 import com.voxopus.chiwiserver.repository.reviewer.FlashcardRepository;
 import com.voxopus.chiwiserver.repository.reviewer.ReviewerRepository;
 import com.voxopus.chiwiserver.repository.setup_session.CreateFlashcardSessionRepository;
@@ -46,6 +38,7 @@ import com.voxopus.chiwiserver.response.setup_session.SetupSessionResponseData;
 import com.voxopus.chiwiserver.response.whisper.WhisperInference;
 import com.voxopus.chiwiserver.session_state.setup.CreateFlashcardSessionState;
 import com.voxopus.chiwiserver.util.Checker;
+import com.voxopus.chiwiserver.util.Whisper;
 
 @Service
 public class ReviewerSetupSessionService {
@@ -82,6 +75,9 @@ public class ReviewerSetupSessionService {
 
     @Autowired
     UserRepository userRepository;
+
+    @Autowired
+    AnswerRepository answerRepository;
 
     public Checker<?> startSession(User user, Long reviewerId){
         Optional<ReviewerSetupSession> session = reviewerSetupSessionRepository
@@ -122,7 +118,7 @@ public class ReviewerSetupSessionService {
             return Checker.fail("user has no session yet");
         }
 
-        WhisperInference inference = whisperTranscribe(audioData);
+        WhisperInference inference = Whisper.transcribe(audioData);
         if(inference.getText() != null){
             System.out.printf("there was inferred text: %s\n", inference.getText());
         }
@@ -247,12 +243,13 @@ public class ReviewerSetupSessionService {
                 break;
             case FINISHED:
                 message = result.getMessage();
-                flashcardRepository.save(Flashcard.builder()
+                Flashcard flashcard = flashcardRepository.save(Flashcard.builder()
                         .type(FlashcardType.SIMPLE)
                         .question(session.getQuestion())
                         .reviewer(reviewerSetupSession.getReviewer())
-                        .answers(createSimpleAnswer(session.getAnswer()))
                         .build());
+                final var answers = createSimpleAnswer(session.getAnswer(), flashcard);
+                answerRepository.saveAll(answers);
                 var step = reviewerSetupSession.getSetupStep();
                 reviewerSetupSession.setCreateFlashcardSession(null);
                 reviewerSetupSession.setSetupStep(null);
@@ -270,9 +267,10 @@ public class ReviewerSetupSessionService {
         return new SetupSessionResponseData<>(message, CREATE_FLASHCARD);
     }
 
-    private List<Answer> createSimpleAnswer(String answer){
+    private List<Answer> createSimpleAnswer(String answer, Flashcard flashcard){
         return List.of(Answer.builder()
             .answer(answer)
+            .flashcard(flashcard)
             .build());
     }
 
@@ -299,28 +297,4 @@ public class ReviewerSetupSessionService {
         }
     }
 
-    private WhisperInference whisperTranscribe(byte[] audioData){
-        RestTemplate template = new RestTemplate();
-        MultiValueMap<String, String> fileMap = new LinkedMultiValueMap<>();
-        ContentDisposition disposition = ContentDisposition.builder("form-data")
-            .name("file")
-            .filename("audio.wav")
-            .build();
-
-        fileMap.add(HttpHeaders.CONTENT_DISPOSITION, disposition.toString());
-        HttpEntity<byte[]> entity = new HttpEntity<byte[]>(audioData, fileMap);
-        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-        body.add("file", entity);
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-        HttpEntity<MultiValueMap<String, Object>> request =
-            new HttpEntity<MultiValueMap<String,Object>>(body, headers);
-
-        URI uri = URI.create("http://localhost:5050/inference");
-        ResponseEntity<WhisperInference> response =
-            template.postForEntity(uri, request, WhisperInference.class);
-        return response.getBody();
-    }
-    
 }
