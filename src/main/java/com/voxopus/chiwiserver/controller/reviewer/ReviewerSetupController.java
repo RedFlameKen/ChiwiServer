@@ -12,59 +12,34 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.voxopus.chiwiserver.model.user.User;
-import com.voxopus.chiwiserver.request.reviewer.ReviewerSetupRequestData;
+import com.voxopus.chiwiserver.controller.RestControllerWithCookies;
+import com.voxopus.chiwiserver.request.reviewer.ReviewSessionStartRequestData;
 import com.voxopus.chiwiserver.response.ResponseData;
-import com.voxopus.chiwiserver.service.reviewer.ReviewerService;
 import com.voxopus.chiwiserver.service.reviewer.ReviewerSetupSessionService;
-import com.voxopus.chiwiserver.service.user.AuthTokenService;
 import com.voxopus.chiwiserver.util.Checker;
-import com.voxopus.chiwiserver.util.CookieUtil;
 
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/reviewer/setup")
-public class ReviewerSetupController {
-
-    @Autowired
-    private AuthTokenService authTokenService;
-
-    @Autowired
-    private ReviewerService reviewerService;
+public class ReviewerSetupController extends RestControllerWithCookies {
 
     @Autowired
     private ReviewerSetupSessionService reviewerSetupSessionService;
 
     @PostMapping("start")
-    public ResponseEntity<?> startMapping(@RequestBody ReviewerSetupRequestData data, HttpServletRequest request){
+    public ResponseEntity<?> startMapping(@RequestBody ReviewSessionStartRequestData data, HttpServletRequest request){
         ResponseData<?> response;
         HttpStatus status;
 
-        Cookie tokenCookie = CookieUtil.getCookie(request.getCookies(), "auth_token");
-        Cookie usernameCookie = CookieUtil.getCookie(request.getCookies(), "username");
-        if(tokenCookie == null || usernameCookie == null){
-            status = HttpStatus.BAD_REQUEST;
-            response = ResponseData.builder()
-                .status_code(status.value())
-                .message("missing auth token")
-                .data(null)
-                .build();
-            return new ResponseEntity<>(response, status);
-        }
-
-        String authToken = tokenCookie.getValue();
-        String username = usernameCookie.getValue();
-        Checker<User> user = authTokenService.checkUserToken(username, authToken);
-        if(!user.isOk()){
-            status = HttpStatus.UNAUTHORIZED;
-            response = createResponseData(status, user);
-            return new ResponseEntity<>(response, status);
+        final var cookie = getUsernameAndTokenCookie(request);
+        if(!cookie.isOk()){
+            return cookie.getResponseEntity();
         }
 
         Checker<?> checker = reviewerSetupSessionService
-            .startSession(user.get(), data.getReviewer_id());
+            .startSession(cookie.getCookie().getUser(),
+                    data.getReviewer_id());
 
         if(!checker.isOk())
             if(checker.getException() != null)
@@ -79,32 +54,19 @@ public class ReviewerSetupController {
     }
 
     @PostMapping("command")
-    public ResponseEntity<?> commandMapping(@RequestPart(name = "audio", required=true) MultipartFile file, HttpServletRequest request) throws IOException{
+    public ResponseEntity<?> commandMapping(
+            @RequestPart(name = "audio", required=true) MultipartFile file,
+            HttpServletRequest request) throws IOException{
         ResponseData<?> response;
         HttpStatus status;
 
-        Cookie tokenCookie = CookieUtil.getCookie(request.getCookies(), "auth_token");
-        Cookie usernameCookie = CookieUtil.getCookie(request.getCookies(), "username");
-        if(tokenCookie == null || usernameCookie == null){
-            status = HttpStatus.BAD_REQUEST;
-            response = ResponseData.builder()
-                .status_code(status.value())
-                .message("missing auth token")
-                .data(null)
-                .build();
-            return new ResponseEntity<>(response, status);
+        final var cookie = getUsernameAndTokenCookie(request);
+        if(!cookie.isOk()){
+            return cookie.getResponseEntity();
         }
 
-        String authToken = tokenCookie.getValue();
-        String username = usernameCookie.getValue();
-        Checker<User> user = authTokenService.checkUserToken(username, authToken);
-        if(!user.isOk()){
-            status = HttpStatus.UNAUTHORIZED;
-            response = createResponseData(status, user);
-            return new ResponseEntity<>(response, status);
-        }
-
-        Checker<?> transcription = reviewerSetupSessionService.processCommand(user.get().getId(), file.getBytes());
+        Checker<?> transcription = reviewerSetupSessionService.processCommand(cookie.getCookie().getUser().getId(),
+                file.getBytes());
 
         status = transcription.isOk() ? HttpStatus.OK : HttpStatus.BAD_REQUEST;
         response = createResponseData(status, transcription);
@@ -112,12 +74,4 @@ public class ReviewerSetupController {
         return new ResponseEntity<>(response, status);
     }
     
-    public ResponseData<?> createResponseData(HttpStatus status, Checker<?> checker){
-        return ResponseData.builder()
-            .status_code(status.value())
-            .message(checker.getMessage())
-            .data(checker.get())
-            .build();
-    }
-
 }

@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.voxopus.chiwiserver.controller.RestControllerWithCookies;
 import com.voxopus.chiwiserver.model.user.User;
 import com.voxopus.chiwiserver.request.user.UserRequestData;
 import com.voxopus.chiwiserver.response.ResponseData;
@@ -30,7 +31,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
-public class UserController {
+public class UserController extends RestControllerWithCookies {
 
     @Autowired
     private UserService userService;
@@ -39,31 +40,31 @@ public class UserController {
     private AuthTokenService authTokenService;
 
     @PostMapping("/signup")
-    public ResponseEntity<?> signup(@RequestBody UserRequestData body){
+    public ResponseEntity<?> signup(@RequestBody UserRequestData body) {
         Checker<UserCreatedResponseData> checker = userService.createUser(body);
 
         HttpStatus status;
         ResponseData<?> response;
 
-        if(!checker.isOk()){
-            if(checker.getException() != null)
+        if (!checker.isOk()) {
+            if (checker.getException() != null)
                 status = HttpStatus.INTERNAL_SERVER_ERROR;
             else
                 status = HttpStatus.CONFLICT;
-        } else 
+        } else
             status = HttpStatus.OK;
 
         response = ResponseData.builder()
-            .status_code(status.value())
-            .message(checker.getMessage())
-            .data(checker.get())
-            .build();
+                .status_code(status.value())
+                .message(checker.getMessage())
+                .data(checker.get())
+                .build();
 
         return new ResponseEntity<>(response, status);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody UserRequestData userRequestData){
+    public ResponseEntity<?> login(@RequestBody UserRequestData userRequestData) {
         HttpStatus status;
         ResponseData<?> response;
 
@@ -71,128 +72,115 @@ public class UserController {
 
         Map<String, List<String>> headers = null;
 
-        if(!checker.isOk()){
-            if(checker.getException() != null)
+        if (!checker.isOk()) {
+            if (checker.getException() != null)
                 status = HttpStatus.INTERNAL_SERVER_ERROR;
             else
                 status = HttpStatus.UNAUTHORIZED;
         } else {
             status = HttpStatus.OK;
 
-            ResponseCookie tokenCookie = 
-                ResponseCookie.from("auth_token", checker.get().getAuth_token())
-                .httpOnly(true)
-                .secure(true)
-                .path("/")
-                .sameSite("None")
-                .maxAge(7 * 24 * 3600)
-                .build();
+            ResponseCookie tokenCookie = ResponseCookie.from("auth_token", checker.get().getAuth_token())
+                    .httpOnly(true)
+                    .secure(true)
+                    .path("/")
+                    .sameSite("None")
+                    .maxAge(7 * 24 * 3600)
+                    .build();
 
-            ResponseCookie usernameCookie = 
-                ResponseCookie.from("username", checker.get().getUsername())
-                .httpOnly(true)
-                .secure(true)
-                .path("/")
-                .sameSite("None")
-                .maxAge(7 * 24 * 3600)
-                .build();
+            ResponseCookie usernameCookie = ResponseCookie.from("username", checker.get().getUsername())
+                    .httpOnly(true)
+                    .secure(true)
+                    .path("/")
+                    .sameSite("None")
+                    .maxAge(7 * 24 * 3600)
+                    .build();
 
-            headers = Map.of(HttpHeaders.SET_COOKIE, 
-                    List.of(tokenCookie.toString(),usernameCookie.toString()));
+            headers = Map.of(HttpHeaders.SET_COOKIE,
+                    List.of(tokenCookie.toString(), usernameCookie.toString()));
         }
 
         response = ResponseData.builder()
-            .status_code(status.value())
-            .message(checker.getMessage())
-            .data(checker.get())
-            .build();
+                .status_code(status.value())
+                .message(checker.getMessage())
+                .data(checker.get())
+                .build();
 
-        if(headers != null){
+        if (headers != null) {
             return new ResponseEntity<>(response, MultiValueMap.fromMultiValue(headers), status);
         }
         return new ResponseEntity<>(response, status);
     }
 
     @GetMapping("/login/auth")
-    public ResponseEntity<?> relogin(HttpServletRequest request){
+    public ResponseEntity<?> relogin(HttpServletRequest request) {
         HttpStatus status;
         ResponseData<?> response;
 
-        Cookie tokenCookie = CookieUtil.getCookie(request.getCookies(), "auth_token");
-        Cookie usernameCookie = CookieUtil.getCookie(request.getCookies(), "username");
-        if(tokenCookie == null || usernameCookie == null){
-            status = HttpStatus.BAD_REQUEST;
-            response = ResponseData.builder()
-                .status_code(status.value())
-                .message("missing auth token")
-                .data(null)
-                .build();
-            return new ResponseEntity<>(response, status);
+        final var cookie = getUsernameAndTokenCookie(request);
+        if (!cookie.isOk()) {
+            return cookie.getResponseEntity();
         }
 
-        String auth_token = tokenCookie.getValue();
-        String username = usernameCookie.getValue();
-
-        Checker<UserLoginResponseData> checker = userService.relogin(auth_token, username);
+        Checker<UserLoginResponseData> checker = userService.relogin(cookie.getCookie().getAuth_token(),
+                cookie.getCookie().getUsername());
 
         Map<String, List<String>> headers = null;
-        if(!checker.isOk()){
-            if(checker.getException() != null)
+        if (!checker.isOk()) {
+            if (checker.getException() != null)
                 status = HttpStatus.INTERNAL_SERVER_ERROR;
             else
                 status = HttpStatus.UNAUTHORIZED;
         } else {
             status = HttpStatus.OK;
 
-            ResponseCookie tokenResponseCookie = 
-                ResponseCookie.from("auth_token", checker.get().getAuth_token())
-                .httpOnly(true)
-                .secure(true)
-                .path("/")
-                .sameSite("None")
-                .maxAge(7 * 24 * 3600)
-                .build();
-            ResponseCookie usernameResponseCookie = 
-                ResponseCookie.from("username", checker.get().getUsername())
-                .httpOnly(true)
-                .secure(true)
-                .path("/")
-                .sameSite("None")
-                .maxAge(7 * 24 * 3600)
-                .build();
+            ResponseCookie tokenResponseCookie = ResponseCookie.from("auth_token", checker.get().getAuth_token())
+                    .httpOnly(true)
+                    .secure(true)
+                    .path("/")
+                    .sameSite("None")
+                    .maxAge(7 * 24 * 3600)
+                    .build();
+            ResponseCookie usernameResponseCookie = ResponseCookie.from("username", checker.get().getUsername())
+                    .httpOnly(true)
+                    .secure(true)
+                    .path("/")
+                    .sameSite("None")
+                    .maxAge(7 * 24 * 3600)
+                    .build();
 
-            headers = Map.of(HttpHeaders.SET_COOKIE, 
-                    List.of(tokenResponseCookie.toString(),usernameResponseCookie.toString()));
+            headers = Map.of(HttpHeaders.SET_COOKIE,
+                    List.of(tokenResponseCookie.toString(), usernameResponseCookie.toString()));
         }
 
         response = ResponseData.builder()
-            .status_code(status.value())
-            .message(checker.getMessage())
-            .data(checker.get())
-            .build();
+                .status_code(status.value())
+                .message(checker.getMessage())
+                .data(checker.get())
+                .build();
 
-        if(headers != null){
+        if (headers != null) {
             return new ResponseEntity<>(response, MultiValueMap.fromMultiValue(headers), status);
         }
         return new ResponseEntity<>(response, status);
     }
 
     @GetMapping("/logout")
-    public ResponseEntity<?> logout(HttpServletRequest request){
-        String token = 
-            HeaderUtil.extractAuthToken(request.getHeader("Authorization"));
+    public ResponseEntity<?> logout(HttpServletRequest request) {
+        // FIXME: use cookies instead
+        String token = HeaderUtil.extractAuthToken(request.getHeader("Authorization"));
 
         ResponseData<?> response;
         HttpStatus status;
 
         Checker<User> user = authTokenService.findUserByAuthToken(token);
 
-        if(!user.isOk()){
+        if (!user.isOk()) {
             status = HttpStatus.UNAUTHORIZED;
             response = ResponseData.builder()
-                .status_code(status.value())
-                .message(user.getMessage())
-                .build();
+                    .status_code(status.value())
+                    .message(user.getMessage())
+                    .build();
             return new ResponseEntity<>(response, status);
         }
 
@@ -200,45 +188,40 @@ public class UserController {
 
         status = HttpStatus.OK;
         response = ResponseData.builder()
-            .status_code(status.value())
-            .message("successfully logged out")
-            .build();
+                .status_code(status.value())
+                .message("successfully logged out")
+                .build();
 
         return new ResponseEntity<>(response, status);
     }
 
     @DeleteMapping("/signout")
-    public ResponseEntity<?> signout(HttpServletRequest request){
-        String token = 
-            HeaderUtil.extractAuthToken(request.getHeader("Authorization"));
+    public ResponseEntity<?> signout(HttpServletRequest request) {
+        // FIXME: use cookies instead
+        String token = HeaderUtil.extractAuthToken(request.getHeader("Authorization"));
 
         ResponseData<?> response;
         HttpStatus status;
 
         Checker<User> user = authTokenService.findUserByAuthToken(token);
 
-        if(!user.isOk()){
+        if (!user.isOk()) {
             status = HttpStatus.UNAUTHORIZED;
             response = ResponseData.builder()
-                .status_code(status.value())
-                .message(user.getMessage())
-                .build();
+                    .status_code(status.value())
+                    .message(user.getMessage())
+                    .build();
             return new ResponseEntity<>(response, status);
         }
 
         userService.signout(user.get());
         status = HttpStatus.OK;
         response = ResponseData.builder()
-            .status_code(status.value())
-            .message("successfully signed user out")
-            .build();
+                .status_code(status.value())
+                .message("successfully signed user out")
+                .build();
 
         return new ResponseEntity<>(response, status);
-    }
-
-    @GetMapping("test")
-    public String foo(){
-        return "shit";
     }
 
 }
