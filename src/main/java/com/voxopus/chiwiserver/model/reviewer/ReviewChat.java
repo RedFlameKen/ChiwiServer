@@ -5,6 +5,7 @@ import java.util.Date;
 import org.hibernate.annotations.CreationTimestamp;
 
 import com.voxopus.chiwiserver.enums.ReviewChatType;
+import com.voxopus.chiwiserver.model.review_session.ReviewSession;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

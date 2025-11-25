@@ -7,6 +7,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import com.voxopus.chiwiserver.enums.FlashcardType;
+import com.voxopus.chiwiserver.model.review_session.FlashcardQueueItem;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -59,7 +60,10 @@ public class Flashcard {
     @JoinColumn(name="reviewer_id")
     private Reviewer reviewer;
 
-    @OneToMany(mappedBy = "flashcard", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "flashcard", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Answer> answers;
+
+    @OneToMany(mappedBy = "flashcard", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<FlashcardQueueItem> flashcardQueueItems;
 
 }

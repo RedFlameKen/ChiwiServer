@@ -1,10 +1,12 @@
-package com.voxopus.chiwiserver.model.reviewer;
+package com.voxopus.chiwiserver.model.review_session;
 
 import java.util.Date;
 import java.util.List;
 
 import org.hibernate.annotations.CreationTimestamp;
 
+import com.voxopus.chiwiserver.model.reviewer.ReviewChat;
+import com.voxopus.chiwiserver.model.reviewer.Reviewer;
 import com.voxopus.chiwiserver.model.user.User;
 
 import jakarta.persistence.CascadeType;
@@ -51,7 +53,12 @@ public class ReviewSession {
     @CreationTimestamp
     private Date timeStarted;
 
-    @OneToMany(mappedBy = "reviewSession", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "reviewSession", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ReviewChat> chats;
+
+    @OneToMany(mappedBy = "reviewSession", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<FlashcardQueueItem> flashcardQueueItems;
+
+    private Long currentFlashcard;
 
 }

@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class ReviewerSetupRequestData {
+public class ReviewSessionStartRequestData {
 
     Long reviewer_id;
     

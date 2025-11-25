@@ -1,4 +1,4 @@
-package com.voxopus.chiwiserver.repository.reviewer;
+package com.voxopus.chiwiserver.repository.setup_session;
 
 import java.util.Optional;
 

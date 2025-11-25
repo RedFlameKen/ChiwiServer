@@ -9,14 +9,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.voxopus.chiwiserver.enums.FlashcardType;
+import com.voxopus.chiwiserver.model.review_session.ReviewSession;
 import com.voxopus.chiwiserver.model.reviewer.Answer;
 import com.voxopus.chiwiserver.model.reviewer.Flashcard;
-import com.voxopus.chiwiserver.model.reviewer.ReviewSession;
 import com.voxopus.chiwiserver.model.reviewer.Reviewer;
 import com.voxopus.chiwiserver.model.user.User;
+import com.voxopus.chiwiserver.repository.review_session.ReviewSessionRepository;
 import com.voxopus.chiwiserver.repository.reviewer.AnswerRepository;
 import com.voxopus.chiwiserver.repository.reviewer.FlashcardRepository;
-import com.voxopus.chiwiserver.repository.reviewer.ReviewSessionRepository;
 import com.voxopus.chiwiserver.repository.reviewer.ReviewerRepository;
 import com.voxopus.chiwiserver.repository.user.UserRepository;
 import com.voxopus.chiwiserver.request.reviewer.CreateAnswerRequestData;

@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.hibernate.annotations.CreationTimestamp;
 
-import com.voxopus.chiwiserver.model.reviewer.ReviewSession;
+import com.voxopus.chiwiserver.model.review_session.ReviewSession;
 import com.voxopus.chiwiserver.model.reviewer.Reviewer;
 import com.voxopus.chiwiserver.model.setup_session.ReviewerSetupSession;
 

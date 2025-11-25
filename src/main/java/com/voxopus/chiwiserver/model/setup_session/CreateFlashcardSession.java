@@ -2,6 +2,7 @@ package com.voxopus.chiwiserver.model.setup_session;
 
 import com.voxopus.chiwiserver.enums.CreateFlashcardState;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -28,8 +29,10 @@ public class CreateFlashcardSession {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
+    @Column(length = 1024)
     String question;
 
+    @Column(length = 1024)
     String answer;
 
     @Enumerated(EnumType.STRING)
