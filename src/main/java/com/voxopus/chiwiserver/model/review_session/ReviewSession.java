@@ -1,5 +1,6 @@
 package com.voxopus.chiwiserver.model.review_session;
 
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -53,6 +54,9 @@ public class ReviewSession {
     @CreationTimestamp
     private Date timeStarted;
 
+    @Temporal(TemporalType.TIMESTAMP)
+    private Calendar dateUsed;
+
     @OneToMany(mappedBy = "reviewSession", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ReviewChat> chats;
 
@@ -60,5 +64,10 @@ public class ReviewSession {
     private List<FlashcardQueueItem> flashcardQueueItems;
 
     private Long currentFlashcard;
+
+    private Long score;
+
+    @OneToOne(mappedBy = "reviewSession", cascade = CascadeType.ALL, orphanRemoval = true)
+    private QuizSession quizSession;
 
 }

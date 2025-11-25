@@ -1,7 +1,6 @@
 package com.voxopus.chiwiserver.model.review_session;
 
-import com.voxopus.chiwiserver.enums.AnswerState;
-import com.voxopus.chiwiserver.model.reviewer.Flashcard;
+import com.voxopus.chiwiserver.enums.QuizState;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -11,7 +10,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,31 +18,28 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 @Entity
-@Table(name = "flashcard_queue_items")
-public class FlashcardQueueItem {
+@Table(name = "quiz_sessions")
+public class QuizSession {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long flashcardQueueItem;
+    Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "flashcard_id")
-    private Flashcard flashcard;
-
-    @ManyToOne
-    @JoinColumn(name = "review_session_id")
-    private ReviewSession reviewSession;
-
-    private Long queuePosition;
+    @Column(length = 1024)
+    String answer;
 
     @Enumerated(EnumType.STRING)
-    private AnswerState answerState;
+    QuizState state;
+
+    @OneToOne
+    @JoinColumn(name="review_session_id")
+    ReviewSession reviewSession;
 
     // @Column(nullable = false, columnDefinition = "TINYINT", length = 1)
-    // private boolean isCorrect;
+    // boolean isAnswering;
     
 }
