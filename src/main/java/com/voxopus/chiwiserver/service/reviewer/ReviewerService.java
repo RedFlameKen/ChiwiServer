@@ -144,8 +144,8 @@ public class ReviewerService {
             return Checker.fail("reviewer not found");
         }
 
-        List<ReviewSession> sessions = reviewSessionRepository.findAllByUserId(userId);
-        if (!sessions.isEmpty()) {
+        Optional<ReviewSession> existingSession = reviewSessionRepository.findByUserId(userId);
+        if (existingSession.isPresent()) {
             return Checker.fail("a session already exists");
         }
 
