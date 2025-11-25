@@ -99,8 +99,8 @@ public class AuthTokenService {
                 token.get().getUser());
     }
 
-    public Checker<User> checkUserToken(String username, String token){
-        Optional<User> user = userRepository.findByUsername(username);
+    public Checker<User> checkUserToken(Long userId, String token){
+        Optional<User> user = userRepository.findById(userId);
         if(!user.isPresent()){
             return Checker.fail("user not found");
         }

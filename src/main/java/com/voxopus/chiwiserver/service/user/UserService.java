@@ -64,12 +64,12 @@ public class UserService {
                 .build());
     }
 
-    public Checker<UserLoginResponseData> relogin(String auth_token, String username){
-        if(auth_token == null || username.isEmpty()){
+    public Checker<UserLoginResponseData> relogin(String auth_token, Long userId){
+        if(auth_token == null){
             return Checker.fail("invalid token");
         }
 
-        Checker<User> foundUser = authTokenService.checkUserToken(username, auth_token);
+        Checker<User> foundUser = authTokenService.checkUserToken(userId, auth_token);
         if(!foundUser.isOk()){
             return Checker.fail(foundUser.getException(), foundUser.getMessage());
         }

@@ -22,11 +22,17 @@ public abstract class RestControllerWithCookies {
 
     protected CookieResult<UsernameAndTokenCookie> getUsernameAndTokenCookie(HttpServletRequest request){
         Cookie tokenCookie = CookieUtil.getCookie(request.getCookies(), "auth_token");
-        Cookie usernameCookie = CookieUtil.getCookie(request.getCookies(), "username");
+        Cookie userIdCookie = CookieUtil.getCookie(request.getCookies(), "user_id");
+
+        if(tokenCookie == null || userIdCookie == null){
+            final var status = HttpStatus.UNAUTHORIZED;
+            final var response = createResponseData(status, Checker.fail("unauthorized"));
+            return CookieResult.fail(new ResponseEntity<>(response, status));
+        }
 
         String authToken = tokenCookie.getValue();
-        String username = usernameCookie.getValue();
-        Checker<User> user = authTokenService.checkUserToken(username, authToken);
+        Long userId = Long.parseLong(userIdCookie.getValue());
+        Checker<User> user = authTokenService.checkUserToken(userId, authToken);
         if(!user.isOk()){
             final var status = HttpStatus.UNAUTHORIZED;
             final var response = createResponseData(status, user);
@@ -34,8 +40,8 @@ public abstract class RestControllerWithCookies {
         }
 
         return CookieResult.ok(UsernameAndTokenCookie.builder()
-                .username(username)
                 .user(user.get())
+                .user_id(userId)
                 .auth_token(authToken)
                 .build());
     }
@@ -52,7 +58,7 @@ public abstract class RestControllerWithCookies {
     @Builder
     protected static class UsernameAndTokenCookie {
         User user;
-        String username;
+        Long user_id;
         String auth_token;
     }
 

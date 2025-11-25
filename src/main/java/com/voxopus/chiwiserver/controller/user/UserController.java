@@ -24,10 +24,8 @@ import com.voxopus.chiwiserver.response.user.UserLoginResponseData;
 import com.voxopus.chiwiserver.service.user.AuthTokenService;
 import com.voxopus.chiwiserver.service.user.UserService;
 import com.voxopus.chiwiserver.util.Checker;
-import com.voxopus.chiwiserver.util.CookieUtil;
 import com.voxopus.chiwiserver.util.HeaderUtil;
 
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
@@ -88,7 +86,7 @@ public class UserController extends RestControllerWithCookies {
                     .maxAge(7 * 24 * 3600)
                     .build();
 
-            ResponseCookie usernameCookie = ResponseCookie.from("username", checker.get().getUsername())
+            ResponseCookie usernameCookie = ResponseCookie.from("user_id", checker.get().getUser_id().toString())
                     .httpOnly(true)
                     .secure(true)
                     .path("/")
@@ -123,7 +121,7 @@ public class UserController extends RestControllerWithCookies {
         }
 
         Checker<UserLoginResponseData> checker = userService.relogin(cookie.getCookie().getAuth_token(),
-                cookie.getCookie().getUsername());
+                cookie.getCookie().getUser_id());
 
         Map<String, List<String>> headers = null;
         if (!checker.isOk()) {
@@ -141,7 +139,7 @@ public class UserController extends RestControllerWithCookies {
                     .sameSite("None")
                     .maxAge(7 * 24 * 3600)
                     .build();
-            ResponseCookie usernameResponseCookie = ResponseCookie.from("username", checker.get().getUsername())
+            ResponseCookie usernameResponseCookie = ResponseCookie.from("user_id", checker.get().getUser_id().toString())
                     .httpOnly(true)
                     .secure(true)
                     .path("/")
