@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.voxopus.chiwiserver.controller.RestControllerWithCookies;
-import com.voxopus.chiwiserver.request.reviewer.ReviewSessionStartRequestData;
+import com.voxopus.chiwiserver.request.reviewer.ReviewSessionRequestData;
 import com.voxopus.chiwiserver.response.ResponseData;
 import com.voxopus.chiwiserver.service.reviewer.ReviewerSetupSessionService;
 import com.voxopus.chiwiserver.util.Checker;
@@ -28,7 +28,7 @@ public class ReviewerSetupController extends RestControllerWithCookies {
     private ReviewerSetupSessionService reviewerSetupSessionService;
 
     @PostMapping("start")
-    public ResponseEntity<?> startMapping(@RequestBody ReviewSessionStartRequestData data, HttpServletRequest request){
+    public ResponseEntity<?> startMapping(@RequestBody ReviewSessionRequestData data, HttpServletRequest request){
         ResponseData<?> response;
         HttpStatus status;
 

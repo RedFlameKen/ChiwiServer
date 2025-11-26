@@ -7,7 +7,7 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 @Builder
-public class FlashcardDetailsResponseData {
+public class QuizResponseData {
 
     String question;
     
