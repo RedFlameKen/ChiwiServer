@@ -37,7 +37,7 @@ public class ReviewSessionController extends RestControllerWithCookies {
 
         final var checker = reviewSessionService.startSession(cookie.getCookie().getUser(), data.getReviewer_id());
 
-        status = checker.isOk() ? HttpStatus.OK : HttpStatus.INTERNAL_SERVER_ERROR;
+        status = checker.isOk() ? HttpStatus.OK : HttpStatus.CONFLICT;
         response = createResponseData(status, checker);
 
         return new ResponseEntity<>(response, status);
