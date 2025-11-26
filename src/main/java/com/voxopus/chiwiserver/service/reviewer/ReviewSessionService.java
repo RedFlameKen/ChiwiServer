@@ -1,7 +1,9 @@
 package com.voxopus.chiwiserver.service.reviewer;
 
+import static com.voxopus.chiwiserver.enums.ReviewCommandType.COMPLETE;
 import static com.voxopus.chiwiserver.enums.ReviewCommandType.FINISH;
 import static com.voxopus.chiwiserver.enums.ReviewCommandType.INIT;
+import static com.voxopus.chiwiserver.enums.ReviewCommandType.MISUNDERSTOOD;
 import static com.voxopus.chiwiserver.enums.ReviewCommandType.QA;
 
 import java.util.ArrayList;
@@ -13,6 +15,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.voxopus.chiwiserver.enums.AnswerState;
 import com.voxopus.chiwiserver.enums.QuizState;
 import com.voxopus.chiwiserver.enums.ReviewCommandType;
 import com.voxopus.chiwiserver.model.review_session.FlashcardQueueItem;
@@ -26,7 +29,8 @@ import com.voxopus.chiwiserver.repository.review_session.QuizSessionRepository;
 import com.voxopus.chiwiserver.repository.review_session.ReviewSessionRepository;
 import com.voxopus.chiwiserver.repository.reviewer.ReviewerRepository;
 import com.voxopus.chiwiserver.repository.user.UserRepository;
-import com.voxopus.chiwiserver.response.review_session.FlashcardDetailsResponseData;
+import com.voxopus.chiwiserver.response.review_session.QuizResponseData;
+import com.voxopus.chiwiserver.response.review_session.ReviewResultsResponseData;
 import com.voxopus.chiwiserver.response.review_session.ReviewSessionResponseData;
 import com.voxopus.chiwiserver.response.whisper.WhisperInference;
 import com.voxopus.chiwiserver.session_state.review.ReviewSessionState;
@@ -37,6 +41,11 @@ import com.voxopus.chiwiserver.util.Whisper;
 public class ReviewSessionService {
 
     public static final String MISUNDERSTOOD_MESSAGE = "Sorry, I cound't understand that, woof!";
+    public static final String REMARK1 = "You did terribly, arf!";
+    public static final String REMARK2 = "You can do better, arf!";
+    public static final String REMARK3 = "You did good, woof!";
+    public static final String REMARK4 = "You did great, woof!";
+    public static final String REMARK5 = "That was awesome, woof!";
 
     @Autowired
     ReviewSessionRepository reviewSessionRepository;
@@ -93,7 +102,7 @@ public class ReviewSessionService {
 
         final var response = new ReviewSessionResponseData<>("Let's start reviewing, woof!",
                 INIT,
-                new FlashcardDetailsResponseData(
+                new QuizResponseData(
                         flashcards.get(0).getFlashcard().getQuestion()));
 
         return Checker.ok("session started", response);
@@ -106,6 +115,7 @@ public class ReviewSessionService {
         for (int i = 0; i < flashcards.size(); i++) {
             final var queueItem = FlashcardQueueItem.builder()
                     .flashcard(flashcards.get(i))
+                    .answerState(AnswerState.UNANSWERED)
                     .reviewSession(session)
                     .queuePosition(Long.valueOf(i))
                     .build();
@@ -141,6 +151,7 @@ public class ReviewSessionService {
                 return qaCommandProcess(session, speech);
             case FINISH:
                 return finishCommandProcess(session);
+            case MISUNDERSTOOD:
             default:
                 return new ReviewSessionResponseData<>("something went wrong, arf!", command);
         }
@@ -154,47 +165,97 @@ public class ReviewSessionService {
             quizSession = session.getQuizSession();
         var state = new ReviewSessionState(quizSession);
         var result = state.handleStates(speech);
-        FlashcardDetailsResponseData data = null;
         String message;
+        final Long currentFlashcard = session.getCurrentFlashcard();
         switch (result.getStatus()) {
             case CONTINUE:
+                FlashcardQueueItem flashcard = session.getFlashcardQueueItems()
+                    .get(currentFlashcard.intValue());
+                QuizResponseData data = 
+                    new QuizResponseData(flashcard.getFlashcard().getQuestion());
                 message = result.getMessage();
                 quizSessionRepository.save(quizSession);
-                break;
+                return new ReviewSessionResponseData<>(message, QA, data);
             case FINISHED:
-                final Long currentFlashcard = session.getCurrentFlashcard();
-                FlashcardQueueItem flashcard = session.getFlashcardQueueItems()
-                        .get(currentFlashcard.intValue());
-                flashcardQueueItemRepository.save(flashcard);
-
-                boolean reviewCompleted = false;
-                if (currentFlashcard + 1 == session.getFlashcardQueueItems().size()) {
-                    reviewCompleted = true;
-                    message = "Review Completed!";
-                } else {
-                    final var nextCard = session.getFlashcardQueueItems()
-                            .get(currentFlashcard.intValue() + 1).getFlashcard();
-                    message = "" + nextCard.getQuestion();
-                    data = new FlashcardDetailsResponseData(nextCard.getQuestion());
-                    session.setCurrentFlashcard(currentFlashcard + 1);
-                }
-
-                session.setQuizSession(null);
-                reviewSessionRepository.saveAndFlush(session);
-                quizSessionRepository.delete(quizSession);
-
-                if(reviewCompleted)
-                    clearSession(session);
-                break;
+                return qaFinished(session, quizSession, currentFlashcard);
             case MISUNDERSTOOD:
             default:
                 message = MISUNDERSTOOD_MESSAGE;
-                break;
+                return new ReviewSessionResponseData<>(message, MISUNDERSTOOD, null);
         }
-        return new ReviewSessionResponseData<>(message, QA, data);
     }
 
-    private void clearSession(ReviewSession session){
+    private ReviewSessionResponseData<?> qaFinished(ReviewSession session, QuizSession quizSession, Long currentFlashcard) {
+        String message;
+        QuizResponseData data = null;
+        ReviewCommandType command = QA;
+
+        if (currentFlashcard + 1 == session.getFlashcardQueueItems().size()) {
+            command = COMPLETE;
+            message = "Review Completed!";
+        } else {
+            final var nextCard = session.getFlashcardQueueItems()
+                    .get(currentFlashcard.intValue() + 1).getFlashcard();
+            message = "" + nextCard.getQuestion();
+            data = new QuizResponseData(nextCard.getQuestion());
+            session.setCurrentFlashcard(currentFlashcard + 1);
+        }
+
+        session.setQuizSession(null);
+        reviewSessionRepository.saveAndFlush(session);
+        quizSessionRepository.delete(quizSession);
+
+        return new ReviewSessionResponseData<>(message, command, data);
+    }
+
+    public Checker<?> showSessionResults(User user){
+        final var session = user.getReviewSession();
+        if(session == null){
+            return Checker.fail("there is no session");
+        }
+
+        final var flashcards = session.getFlashcardQueueItems();
+        if(session.getCurrentFlashcard() + 1 < flashcards.size()){
+            return Checker.fail("session isn't done yet");
+        }
+
+        int score = 0;
+        int itemCount;
+        String remark;
+        itemCount = flashcards.size();
+        for (var flashcard : flashcards) {
+            if(flashcard.getAnswerState() == AnswerState.CORRECT)
+                score++;
+        }
+
+        remark = getRemark(score, itemCount);
+
+        clearSession(session);
+
+        return Checker.ok("session finished", ReviewResultsResponseData.builder()
+                .score(score)
+                .total_items(itemCount)
+                .message(remark)
+                .build());
+    }
+
+    // FIXME: giving the wrong remark
+    private String getRemark(int score, int total){
+        double ratio = score/total;
+        if(ratio >= 0.9){
+            return REMARK5;
+        } else if(ratio >= 0.8){
+            return REMARK4;
+        } else if(ratio >= 0.7){
+            return REMARK3;
+        } else if(ratio >= 0.4){
+            return REMARK2;
+        } else {
+            return REMARK1;
+        }
+    }
+
+    private void clearSession(ReviewSession session) {
         User user = session.getUser();
         user.setReviewSession(null);
         userRepository.saveAndFlush(user);

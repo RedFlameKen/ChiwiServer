@@ -62,4 +62,20 @@ public class ReviewSessionController extends RestControllerWithCookies {
         return new ResponseEntity<>(response, status);
     }
 
+    @PostMapping("/finish")
+    public ResponseEntity<?> finishSession(HttpServletRequest request, @RequestBody ReviewSessionRequestData body){
+        HttpStatus status;
+        ResponseData<?> response;
+        final var cookie = getUsernameAndTokenCookie(request);
+        if(!cookie.isOk()){
+            return cookie.getResponseEntity();
+        }
+
+        final var checker = reviewSessionService.showSessionResults(cookie.getCookie().getUser());
+        status = checker.isOk() ? HttpStatus.OK : HttpStatus.CONFLICT;
+        response = createResponseData(status, checker);
+
+        return new ResponseEntity<>(response, status);
+    }
+
 }
