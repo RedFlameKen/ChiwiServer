@@ -16,6 +16,7 @@ public class SessionStateHelper {
             case "nope":
             case "nah":
                 return ConfirmEnum.NO;
+            case "":
             default:
                 return ConfirmEnum.MISUNDERSTOOD;
         }

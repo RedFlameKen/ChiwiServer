@@ -43,6 +43,8 @@ public class ReviewSessionState extends SessionState<QuizSession>{
 
     private StateResult listenForAnswer(String input){
         session.setState(QuizState.CONFIRM_ANSWER);
+        if(input.equals(""))
+            return new StateResult(null, MISUNDERSTOOD);
         session.setAnswer(input);
         return new StateResult("is " + input + " correct?", CONTINUE);
     }

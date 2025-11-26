@@ -232,6 +232,8 @@ public class ReviewSessionService {
             case "done":
             case "finish":
                 return FINISH;
+            case "":
+                return MISUNDERSTOOD;
             default:
                 return QA;
         }

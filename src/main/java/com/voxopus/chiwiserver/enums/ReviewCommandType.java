@@ -3,5 +3,7 @@ package com.voxopus.chiwiserver.enums;
 public enum ReviewCommandType {
     INIT,
     QA,
-    FINISH
+    FINISH,
+    COMPLETE,
+    MISUNDERSTOOD
 }
