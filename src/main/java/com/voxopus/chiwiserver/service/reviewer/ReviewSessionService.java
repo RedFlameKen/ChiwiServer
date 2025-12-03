@@ -291,8 +291,7 @@ public class ReviewSessionService {
         return result;
     }
 
-    // FIXME: giving the wrong remark
-    private String getRemark(int score, int total) {
+    private String getRemark(double score, double total) {
         double ratio = score / total;
         if (ratio >= 0.9) {
             return REMARK5;
