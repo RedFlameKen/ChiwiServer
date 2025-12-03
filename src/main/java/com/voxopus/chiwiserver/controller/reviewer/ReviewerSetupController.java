@@ -54,6 +54,23 @@ public class ReviewerSetupController extends RestControllerWithCookies {
         return new ResponseEntity<>(response, status);
     }
 
+    @PostMapping("/cancel")
+    public ResponseEntity<?> cancelSession(HttpServletRequest request, @RequestBody ReviewSessionRequestData data){
+        HttpStatus status;
+        ResponseData<?> response;
+        final var cookie = getUsernameAndTokenCookie(request);
+        if(!cookie.isOk()){
+            return cookie.getResponseEntity();
+        }
+
+        final var checker = reviewerSetupSessionService.cancelSession(cookie.getCookie().getUser(), data.getReviewer_id());
+
+        status = checker.isOk() ? HttpStatus.OK : HttpStatus.NOT_FOUND;
+        response = createResponseData(status, checker);
+
+        return new ResponseEntity<>(response, status);
+    }
+
     @PostMapping("command/input")
     public ResponseEntity<?> commandMapping(HttpServletRequest request, @RequestBody CommandRequestData data) throws IOException{
         ResponseData<?> response;

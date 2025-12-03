@@ -80,19 +80,33 @@ public class ReviewerSetupSessionService {
     @Autowired
     AnswerRepository answerRepository;
 
-    public Checker<?> startSession(User user, Long reviewerId){
-        Optional<ReviewerSetupSession> session = reviewerSetupSessionRepository
-            .findByReviewerId(reviewerId);
+    public Checker<?> cancelSession(User user, Long reviewerId){
+        final var reviewer = reviewerRepository.findById(reviewerId);
+        if(!reviewer.isPresent()){
+            return Checker.fail("reviewer does not exist");
+        }
 
-        if(session.isPresent()){
-            Calendar now = Calendar.getInstance();
-            Calendar expiration = session.get().getDateUsed();
-            expiration.add(Calendar.MINUTE, 30);
-            if(now.before(expiration)){
-                return Checker.fail("A session is still active");
-            }
-            reviewerSetupSessionRepository.delete(session.get());
-            reviewerSetupSessionRepository.flush();
+        final var session = reviewer.get().getReviewerSetupSession();
+
+        deleteSetupSession(session);
+
+        return Checker.ok("successfully deleted the session", null);
+    }
+
+    public Checker<?> startSession(User user, Long reviewerId){
+        ReviewerSetupSession session = user.getReviewerSetupSession();
+
+        if(session != null){
+            // Calendar now = Calendar.getInstance();
+            // Calendar expiration = session.getDateUsed();
+            // expiration.add(Calendar.MINUTE, 30);
+            // if(now.before(expiration)){
+            //     deleteSetupSession(session.get());
+            //     return Checker.ok("A session is still active", true);
+            // }
+            deleteSetupSession(session);
+            // reviewerSetupSessionRepository.delete(session.get());
+            // reviewerSetupSessionRepository.flush();
         }
 
         Optional<Reviewer> reviewer = reviewerRepository.findById(reviewerId);

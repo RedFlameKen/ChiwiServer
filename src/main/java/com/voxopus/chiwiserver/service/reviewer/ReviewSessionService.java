@@ -1,5 +1,6 @@
 package com.voxopus.chiwiserver.service.reviewer;
 
+import static com.voxopus.chiwiserver.enums.ReviewCommandType.ASK_RESET;
 import static com.voxopus.chiwiserver.enums.ReviewCommandType.COMPLETE;
 import static com.voxopus.chiwiserver.enums.ReviewCommandType.FINISH;
 import static com.voxopus.chiwiserver.enums.ReviewCommandType.INIT;
@@ -65,16 +66,38 @@ public class ReviewSessionService {
     @Autowired
     UserRepository userRepository;
 
+    public Checker<?> cancelSession(User user, Long reviewerId) {
+        final var reviewer = reviewerRepository.findById(reviewerId);
+        if (!reviewer.isPresent()) {
+            return Checker.fail("reviewer does not exist");
+        }
+
+        final var session = reviewer.get().getReviewSession();
+
+        clearSession(session);
+
+        return Checker.ok("successfully deleted the session", null);
+    }
+
     public Checker<?> startSession(User user, Long reviewerId) {
-        Optional<ReviewSession> existingSession = reviewSessionRepository.findByReviewerId(reviewerId);
-        if (existingSession.isPresent()) {
-            Calendar now = Calendar.getInstance();
-            Calendar expiration = existingSession.get().getDateUsed();
-            expiration.add(Calendar.MINUTE, 30);
-            if (now.before(expiration)) {
-                return Checker.fail("A session is still active");
-            }
-            reviewSessionRepository.delete(existingSession.get());
+        ReviewSession existingSession = user.getReviewSession();
+
+        if (existingSession != null) {
+            // Calendar now = Calendar.getInstance();
+            // Calendar expiration = existingSession.get().getDateUsed();
+            // expiration.add(Calendar.MINUTE, 30);
+            // if (now.before(expiration)) {
+            // final var response = new ReviewSessionResponseData<>("A session is still
+            // active",
+            // ASK_RESET, null);
+            // return Checker.ok("A session is still active", response);
+            // }
+            final var quizSession = existingSession.getQuizSession();
+            existingSession.setQuizSession(null);
+            reviewSessionRepository.saveAndFlush(existingSession);
+            quizSessionRepository.delete(quizSession);
+            clearSession(existingSession);
+            // reviewSessionRepository.delete(existingSession.get());
             reviewSessionRepository.flush();
         }
 
@@ -138,7 +161,6 @@ public class ReviewSessionService {
         if (!session.isPresent()) {
             return Checker.fail("User has no review session active");
         }
-
 
         ReviewCommandType command = getCommand(input);
         final var result = handleCommands(session.get(), input, command);
@@ -267,7 +289,6 @@ public class ReviewSessionService {
                 score++;
         }
 
-
         remark = getRemark(score, itemCount);
 
         clearSession(session);
@@ -280,7 +301,7 @@ public class ReviewSessionService {
                 .build());
     }
 
-    private List<AnswerResponseData> getResultAnswers(Flashcard flashcard){
+    private List<AnswerResponseData> getResultAnswers(Flashcard flashcard) {
         final var result = new ArrayList<AnswerResponseData>();
         for (var answer : flashcard.getAnswers()) {
             result.add(AnswerResponseData.builder()
