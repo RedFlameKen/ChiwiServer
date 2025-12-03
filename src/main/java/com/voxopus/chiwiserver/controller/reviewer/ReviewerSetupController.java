@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.voxopus.chiwiserver.controller.RestControllerWithCookies;
+import com.voxopus.chiwiserver.request.reviewer.CommandRequestData;
 import com.voxopus.chiwiserver.request.reviewer.ReviewSessionRequestData;
 import com.voxopus.chiwiserver.response.ResponseData;
 import com.voxopus.chiwiserver.service.reviewer.ReviewerSetupSessionService;
@@ -49,6 +50,25 @@ public class ReviewerSetupController extends RestControllerWithCookies {
         else
             status = HttpStatus.OK;
         response = createResponseData(status, checker);
+
+        return new ResponseEntity<>(response, status);
+    }
+
+    @PostMapping("command/input")
+    public ResponseEntity<?> commandMapping(HttpServletRequest request, @RequestBody CommandRequestData data) throws IOException{
+        ResponseData<?> response;
+        HttpStatus status;
+
+        final var cookie = getUsernameAndTokenCookie(request);
+        if(!cookie.isOk()){
+            return cookie.getResponseEntity();
+        }
+
+        Checker<?> transcription = reviewerSetupSessionService.processCommand(cookie.getCookie().getUser().getId(),
+                data.getCommand());
+
+        status = transcription.isOk() ? HttpStatus.OK : HttpStatus.BAD_REQUEST;
+        response = createResponseData(status, transcription);
 
         return new ResponseEntity<>(response, status);
     }

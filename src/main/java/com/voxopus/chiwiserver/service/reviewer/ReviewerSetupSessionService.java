@@ -113,6 +113,23 @@ public class ReviewerSetupSessionService {
                 .build());
     }
 
+    public Checker<?> processCommand(Long userId, String input){
+        var session = reviewerSetupSessionRepository.findByUserId(userId);
+        if(!session.isPresent()){
+            return Checker.fail("user has no session yet");
+        }
+
+        var state = session.get().getSetupStep();
+        SetupCommandType command;
+        if(state == null)
+            command = getSetupCommandType(input);
+
+        else command = state.getCommandType();
+        var response = dispatchCommand(session.get(), input, command);
+
+        return Checker.ok("command processed", response);
+    }
+
     public Checker<?> processCommand(Long userId, byte[] audioData){
         var session = reviewerSetupSessionRepository.findByUserId(userId);
         if(!session.isPresent()){
