@@ -119,7 +119,7 @@ public class ReviewerSetupSessionService {
 
         reviewerSetupSessionRepository.save(newSession);
 
-        return Checker.ok(ReviewerSetupResponseData.builder()
+        return Checker.ok(HELP_MESSAGE, ReviewerSetupResponseData.builder()
                 .id(newSession.getId())
                 .date_started(newSession.getDateStarted())
                 .date_used(newSession.getDateUsed())
