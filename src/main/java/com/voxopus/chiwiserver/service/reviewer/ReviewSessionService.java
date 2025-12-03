@@ -35,6 +35,7 @@ import com.voxopus.chiwiserver.response.review_session.ReviewSessionResponseData
 import com.voxopus.chiwiserver.response.whisper.WhisperInference;
 import com.voxopus.chiwiserver.session_state.review.ReviewSessionState;
 import com.voxopus.chiwiserver.util.Checker;
+import com.voxopus.chiwiserver.util.StringHelper;
 import com.voxopus.chiwiserver.util.Whisper;
 
 @Service
@@ -102,8 +103,12 @@ public class ReviewSessionService {
 
         final var response = new ReviewSessionResponseData<>("Let's start reviewing, woof!",
                 INIT,
-                new QuizResponseData(
-                        flashcards.get(0).getFlashcard().getQuestion()));
+                QuizResponseData.builder()
+                        .question(flashcards.get(0).getFlashcard().getQuestion())
+                        .flashcard_count(flashcards.size())
+                        .state(quizSession.getState())
+                        .cur_flashcard(session.getCurrentFlashcard())
+                        .build());
 
         return Checker.ok("session started", response);
     }
@@ -146,6 +151,7 @@ public class ReviewSessionService {
 
     private ReviewSessionResponseData<?> handleCommands(ReviewSession session, String speech,
             ReviewCommandType command) {
+        speech = StringHelper.removeNextline(speech);
         switch (command) {
             case QA:
                 return qaCommandProcess(session, speech);
@@ -170,9 +176,13 @@ public class ReviewSessionService {
         switch (result.getStatus()) {
             case CONTINUE:
                 FlashcardQueueItem flashcard = session.getFlashcardQueueItems()
-                    .get(currentFlashcard.intValue());
-                QuizResponseData data = 
-                    new QuizResponseData(flashcard.getFlashcard().getQuestion());
+                        .get(currentFlashcard.intValue());
+                QuizResponseData data = QuizResponseData.builder()
+                        .question(flashcard.getFlashcard().getQuestion())
+                        .state(quizSession.getState())
+                        .flashcard_count(session.getFlashcardQueueItems().size())
+                        .cur_flashcard(currentFlashcard)
+                        .build();
                 message = result.getMessage();
                 quizSessionRepository.save(quizSession);
                 return new ReviewSessionResponseData<>(message, QA, data);
@@ -185,7 +195,8 @@ public class ReviewSessionService {
         }
     }
 
-    private ReviewSessionResponseData<?> qaFinished(ReviewSession session, QuizSession quizSession, Long currentFlashcard) {
+    private ReviewSessionResponseData<?> qaFinished(ReviewSession session, QuizSession quizSession,
+            Long currentFlashcard) {
         String message;
         QuizResponseData data = null;
         ReviewCommandType command = QA;
@@ -197,8 +208,13 @@ public class ReviewSessionService {
             final var nextCard = session.getFlashcardQueueItems()
                     .get(currentFlashcard.intValue() + 1).getFlashcard();
             message = "" + nextCard.getQuestion();
-            data = new QuizResponseData(nextCard.getQuestion());
             session.setCurrentFlashcard(currentFlashcard + 1);
+            data = QuizResponseData.builder()
+                .question(nextCard.getQuestion())
+                .state(quizSession.getState())
+                .cur_flashcard(currentFlashcard + 1)
+                .flashcard_count(session.getFlashcardQueueItems().size())
+                .build();
         }
 
         session.setQuizSession(null);
@@ -208,14 +224,14 @@ public class ReviewSessionService {
         return new ReviewSessionResponseData<>(message, command, data);
     }
 
-    public Checker<?> showSessionResults(User user){
+    public Checker<?> showSessionResults(User user) {
         final var session = user.getReviewSession();
-        if(session == null){
+        if (session == null) {
             return Checker.fail("there is no session");
         }
 
         final var flashcards = session.getFlashcardQueueItems();
-        if(session.getCurrentFlashcard() + 1 < flashcards.size()){
+        if (session.getCurrentFlashcard() + 1 < flashcards.size()) {
             return Checker.fail("session isn't done yet");
         }
 
@@ -224,7 +240,7 @@ public class ReviewSessionService {
         String remark;
         itemCount = flashcards.size();
         for (var flashcard : flashcards) {
-            if(flashcard.getAnswerState() == AnswerState.CORRECT)
+            if (flashcard.getAnswerState() == AnswerState.CORRECT)
                 score++;
         }
 
@@ -240,15 +256,15 @@ public class ReviewSessionService {
     }
 
     // FIXME: giving the wrong remark
-    private String getRemark(int score, int total){
-        double ratio = score/total;
-        if(ratio >= 0.9){
+    private String getRemark(int score, int total) {
+        double ratio = score / total;
+        if (ratio >= 0.9) {
             return REMARK5;
-        } else if(ratio >= 0.8){
+        } else if (ratio >= 0.8) {
             return REMARK4;
-        } else if(ratio >= 0.7){
+        } else if (ratio >= 0.7) {
             return REMARK3;
-        } else if(ratio >= 0.4){
+        } else if (ratio >= 0.4) {
             return REMARK2;
         } else {
             return REMARK1;

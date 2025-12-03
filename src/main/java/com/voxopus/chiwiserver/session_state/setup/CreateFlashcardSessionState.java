@@ -41,8 +41,9 @@ public class CreateFlashcardSessionState extends SessionState<CreateFlashcardSes
 
     public StateResult listenQuestion(String question){
         session.setState(CONFIRM_QUESTION);
+        question = StringHelper.removeMinorNoise(question);
         session.setQuestion(question);
-        return new StateResult("is " + session.getQuestion() + " correct?", CONTINUE);
+        return new StateResult("is \"" + question + "\" correct?", CONTINUE);
     }
 
     public StateResult confirmQuestion(String confirm){
@@ -63,8 +64,9 @@ public class CreateFlashcardSessionState extends SessionState<CreateFlashcardSes
 
     public StateResult listenAnswer(String answer){
         session.setState(CONFIRM_ANSWER);
+        answer = StringHelper.removeMinorNoise(answer);
         session.setAnswer(answer);
-        return new StateResult("is " + session.getAnswer() + " correct?", CONTINUE);
+        return new StateResult("is \"" + answer + "\" correct?", CONTINUE);
     }
 
     public StateResult confirmAnswer(String confirm){

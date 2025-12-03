@@ -18,6 +18,9 @@ public class SetupSessionResponseData<T> {
     @NonNull
     SetupCommandType command;
 
+    @NonNull
+    String transcribed;
+
     T data;
     
 }

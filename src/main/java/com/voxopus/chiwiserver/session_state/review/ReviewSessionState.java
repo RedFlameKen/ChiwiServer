@@ -45,8 +45,9 @@ public class ReviewSessionState extends SessionState<QuizSession>{
         session.setState(QuizState.CONFIRM_ANSWER);
         if(input.equals(""))
             return new StateResult(null, MISUNDERSTOOD);
+        input = StringHelper.removeMinorNoise(input);
         session.setAnswer(input);
-        return new StateResult("is " + input + " correct?", CONTINUE);
+        return new StateResult("is \"" + input + "\" correct?", CONTINUE);
     }
 
     private StateResult confirmAnswer(String confirm){

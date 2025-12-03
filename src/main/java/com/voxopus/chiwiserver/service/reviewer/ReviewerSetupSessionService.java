@@ -38,6 +38,7 @@ import com.voxopus.chiwiserver.response.setup_session.SetupSessionResponseData;
 import com.voxopus.chiwiserver.response.whisper.WhisperInference;
 import com.voxopus.chiwiserver.session_state.setup.CreateFlashcardSessionState;
 import com.voxopus.chiwiserver.util.Checker;
+import com.voxopus.chiwiserver.util.StringHelper;
 import com.voxopus.chiwiserver.util.Whisper;
 
 @Service
@@ -139,23 +140,23 @@ public class ReviewerSetupSessionService {
     }
 
     private SetupSessionResponseData<?> dispatchCommand(ReviewerSetupSession session, String speech, SetupCommandType commandType){
+        speech = StringHelper.removeNextline(speech);
         switch (commandType) {
-            // TODO: actually create more functions or entities for each command for them to do different things
             case CREATE_FLASHCARD:
                 return createFlashcardCommandProcess(session, speech);
             case FINISH_SETUP:
-                return finishSetupCommandProcess(session);
+                return finishSetupCommandProcess(session, speech);
             case HELP:
-                return new SetupSessionResponseData<>(HELP_MESSAGE, commandType);
+                return new SetupSessionResponseData<>(HELP_MESSAGE, commandType, speech);
             case LIST:
-                return listFlashcardsCommandProcess(session);
+                return listFlashcardsCommandProcess(session, speech);
             case MISUNDERSTOOD:
             default:
-                return new SetupSessionResponseData<>(MISUNDERSTOOD_MESSAGE, commandType);
+                return new SetupSessionResponseData<>(MISUNDERSTOOD_MESSAGE, commandType, speech);
         }
     }
 
-    private SetupSessionResponseData<?> listFlashcardsCommandProcess(ReviewerSetupSession session){
+    private SetupSessionResponseData<?> listFlashcardsCommandProcess(ReviewerSetupSession session, String speech){
         List<Flashcard> flashcards = session.getReviewer().getFlashcards();
 
         ArrayList<FlashcardResponseData> data = new ArrayList<>();
@@ -178,12 +179,12 @@ public class ReviewerSetupSessionService {
                 .build();
             data.add(responseData);
         });
-        return new SetupSessionResponseData<>(LIST_FLASHCARDS_MESSAGE, LIST, data);
+        return new SetupSessionResponseData<>(LIST_FLASHCARDS_MESSAGE, LIST, speech, data);
     }
 
-    private SetupSessionResponseData<?> finishSetupCommandProcess(ReviewerSetupSession session){
+    private SetupSessionResponseData<?> finishSetupCommandProcess(ReviewerSetupSession session, String speech){
         deleteSetupSession(session);
-        return new SetupSessionResponseData<>("Alright, I cleaned it all up, woof!", FINISH_SETUP);
+        return new SetupSessionResponseData<>("Alright, I cleaned it all up, woof!", FINISH_SETUP, speech);
     }
 
     private void deleteSetupSession(ReviewerSetupSession session){
@@ -264,7 +265,7 @@ public class ReviewerSetupSessionService {
                 message = MISUNDERSTOOD_MESSAGE;
                 break;
         }
-        return new SetupSessionResponseData<>(message, CREATE_FLASHCARD);
+        return new SetupSessionResponseData<>(message, CREATE_FLASHCARD, speech);
     }
 
     private List<Answer> createSimpleAnswer(String answer, Flashcard flashcard){
