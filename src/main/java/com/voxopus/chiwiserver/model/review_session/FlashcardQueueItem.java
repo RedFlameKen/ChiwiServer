@@ -43,6 +43,8 @@ public class FlashcardQueueItem {
     @Enumerated(EnumType.STRING)
     private AnswerState answerState;
 
+    private String submittedAnswer;
+
     // @Column(nullable = false, columnDefinition = "TINYINT", length = 1)
     // private boolean isCorrect;
     

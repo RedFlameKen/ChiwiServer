@@ -14,7 +14,7 @@ import com.voxopus.chiwiserver.session_state.SessionStateHelper;
 import com.voxopus.chiwiserver.session_state.StateResult;
 import com.voxopus.chiwiserver.util.StringHelper;
 
-public class ReviewSessionState extends SessionState<QuizSession>{
+public class ReviewSessionState extends SessionState<QuizSession> {
 
     public ReviewSessionState(QuizSession session) {
         super(session);
@@ -34,23 +34,23 @@ public class ReviewSessionState extends SessionState<QuizSession>{
         }
     }
 
-    private StateResult askQuestion(){
+    private StateResult askQuestion() {
         Long index = session.getReviewSession().getCurrentFlashcard();
         FlashcardQueueItem curFlashcard = session.getReviewSession().getFlashcardQueueItems().get(index.intValue());
         session.setState(QuizState.LISTEN_FOR_ANSWER);
         return new StateResult(curFlashcard.getFlashcard().getQuestion(), StateStatus.CONTINUE);
     }
 
-    private StateResult listenForAnswer(String input){
+    private StateResult listenForAnswer(String input) {
         session.setState(QuizState.CONFIRM_ANSWER);
-        if(input.equals(""))
+        if (input.equals(""))
             return new StateResult(null, MISUNDERSTOOD);
         input = StringHelper.removeMinorNoise(input);
         session.setAnswer(input);
         return new StateResult("is \"" + input + "\" correct?", CONTINUE);
     }
 
-    private StateResult confirmAnswer(String confirm){
+    private StateResult confirmAnswer(String confirm) {
         String normalized = StringHelper.normalize(confirm);
         Long index = session.getReviewSession().getCurrentFlashcard();
         FlashcardQueueItem curFlashcard = session.getReviewSession().getFlashcardQueueItems().get(index.intValue());
@@ -67,10 +67,10 @@ public class ReviewSessionState extends SessionState<QuizSession>{
         }
     }
 
-    private void evaluateAnswer(FlashcardQueueItem curFlashcard){
+    private void evaluateAnswer(FlashcardQueueItem curFlashcard) {
         String answer = curFlashcard.getFlashcard().getAnswers().get(0).getAnswer().toLowerCase();
-
-        if(session.getAnswer().toLowerCase().equals(answer))
+        curFlashcard.setSubmittedAnswer(answer);
+        if (session.getAnswer().toLowerCase().equals(answer))
             curFlashcard.setAnswerState(AnswerState.CORRECT);
         else
             curFlashcard.setAnswerState(AnswerState.WRONG);

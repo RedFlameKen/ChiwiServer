@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.voxopus.chiwiserver.controller.RestControllerWithCookies;
+import com.voxopus.chiwiserver.request.reviewer.CommandRequestData;
 import com.voxopus.chiwiserver.request.reviewer.ReviewSessionRequestData;
 import com.voxopus.chiwiserver.response.ResponseData;
 import com.voxopus.chiwiserver.service.reviewer.ReviewSessionService;
@@ -38,6 +39,23 @@ public class ReviewSessionController extends RestControllerWithCookies {
         final var checker = reviewSessionService.startSession(cookie.getCookie().getUser(), data.getReviewer_id());
 
         status = checker.isOk() ? HttpStatus.OK : HttpStatus.CONFLICT;
+        response = createResponseData(status, checker);
+
+        return new ResponseEntity<>(response, status);
+    }
+
+    @PostMapping("/command/input")
+    public ResponseEntity<?> processCommandText(HttpServletRequest request, @RequestBody CommandRequestData data) throws IOException{
+        HttpStatus status;
+        ResponseData<?> response;
+        final var cookie = getUsernameAndTokenCookie(request);
+        if(!cookie.isOk()){
+            return cookie.getResponseEntity();
+        }
+
+        final var checker = reviewSessionService.processCommand(cookie.getCookie().getUser_id(), data.getCommand());
+
+        status = checker.isOk() ? HttpStatus.OK : HttpStatus.INTERNAL_SERVER_ERROR;
         response = createResponseData(status, checker);
 
         return new ResponseEntity<>(response, status);

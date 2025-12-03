@@ -29,9 +29,11 @@ import com.voxopus.chiwiserver.repository.review_session.QuizSessionRepository;
 import com.voxopus.chiwiserver.repository.review_session.ReviewSessionRepository;
 import com.voxopus.chiwiserver.repository.reviewer.ReviewerRepository;
 import com.voxopus.chiwiserver.repository.user.UserRepository;
+import com.voxopus.chiwiserver.response.review_session.FlashcardResultResponseData;
 import com.voxopus.chiwiserver.response.review_session.QuizResponseData;
 import com.voxopus.chiwiserver.response.review_session.ReviewResultsResponseData;
 import com.voxopus.chiwiserver.response.review_session.ReviewSessionResponseData;
+import com.voxopus.chiwiserver.response.reviewer.AnswerResponseData;
 import com.voxopus.chiwiserver.response.whisper.WhisperInference;
 import com.voxopus.chiwiserver.session_state.review.ReviewSessionState;
 import com.voxopus.chiwiserver.util.Checker;
@@ -130,6 +132,20 @@ public class ReviewSessionService {
         return queueItems;
     }
 
+    public Checker<?> processCommand(Long userId, String input) {
+        var session = reviewSessionRepository.findByUserId(userId);
+
+        if (!session.isPresent()) {
+            return Checker.fail("User has no review session active");
+        }
+
+
+        ReviewCommandType command = getCommand(input);
+        final var result = handleCommands(session.get(), input, command);
+
+        return Checker.ok(result.getMessage(), result);
+    }
+
     public Checker<?> processCommand(Long userId, byte[] audioData) {
         var session = reviewSessionRepository.findByUserId(userId);
 
@@ -159,7 +175,7 @@ public class ReviewSessionService {
                 return finishCommandProcess(session);
             case MISUNDERSTOOD:
             default:
-                return new ReviewSessionResponseData<>("something went wrong, arf!", command);
+                return new ReviewSessionResponseData<>(MISUNDERSTOOD_MESSAGE, command);
         }
     }
 
@@ -210,11 +226,11 @@ public class ReviewSessionService {
             message = "" + nextCard.getQuestion();
             session.setCurrentFlashcard(currentFlashcard + 1);
             data = QuizResponseData.builder()
-                .question(nextCard.getQuestion())
-                .state(quizSession.getState())
-                .cur_flashcard(currentFlashcard + 1)
-                .flashcard_count(session.getFlashcardQueueItems().size())
-                .build();
+                    .question(nextCard.getQuestion())
+                    .state(quizSession.getState())
+                    .cur_flashcard(currentFlashcard + 1)
+                    .flashcard_count(session.getFlashcardQueueItems().size())
+                    .build();
         }
 
         session.setQuizSession(null);
@@ -238,11 +254,19 @@ public class ReviewSessionService {
         int score = 0;
         int itemCount;
         String remark;
+        ArrayList<FlashcardResultResponseData> flashcardResults = new ArrayList<>();
         itemCount = flashcards.size();
         for (var flashcard : flashcards) {
+            flashcardResults.add(FlashcardResultResponseData.builder()
+                    .question(flashcard.getFlashcard().getQuestion())
+                    .answer_state(flashcard.getAnswerState())
+                    .submitted_answer(flashcard.getSubmittedAnswer())
+                    .answers(getResultAnswers(flashcard.getFlashcard()))
+                    .build());
             if (flashcard.getAnswerState() == AnswerState.CORRECT)
                 score++;
         }
+
 
         remark = getRemark(score, itemCount);
 
@@ -252,7 +276,19 @@ public class ReviewSessionService {
                 .score(score)
                 .total_items(itemCount)
                 .message(remark)
+                .flashcards(flashcardResults)
                 .build());
+    }
+
+    private List<AnswerResponseData> getResultAnswers(Flashcard flashcard){
+        final var result = new ArrayList<AnswerResponseData>();
+        for (var answer : flashcard.getAnswers()) {
+            result.add(AnswerResponseData.builder()
+                    .id(answer.getId())
+                    .answer(answer.getAnswer())
+                    .build());
+        }
+        return result;
     }
 
     // FIXME: giving the wrong remark
