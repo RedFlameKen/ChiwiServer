@@ -6,6 +6,7 @@ import static com.voxopus.chiwiserver.enums.SetupCommandType.FINISH_SETUP;
 import static com.voxopus.chiwiserver.enums.SetupCommandType.HELP;
 import static com.voxopus.chiwiserver.enums.SetupCommandType.LIST;
 import static com.voxopus.chiwiserver.enums.SetupCommandType.MISUNDERSTOOD;
+import static com.voxopus.chiwiserver.enums.SetupCommandType.RUDE;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -44,9 +45,10 @@ import com.voxopus.chiwiserver.util.Whisper;
 @Service
 public class ReviewerSetupSessionService {
 
-    public static final String MISUNDERSTOOD_MESSAGE = "Sorry, I cound't understand that, woof!";
+    public static final String MISUNDERSTOOD_MESSAGE = "Sorry, not sure what you mean, woof!";
     public static final String LIST_FLASHCARDS_MESSAGE = "Here are the flashcards in this reviewer, woof!";
-    public static final String UNAVAILABLE_MESSAGE = "feature unavailable, woof!";
+    public static final String UNAVAILABLE_MESSAGE = "Feature unavailable, woof!";
+    public static final String RUDE_MESSAGE = "Rude...";
     public static final String HELP_MESSAGE = """
         Commands:
         "help": 
@@ -181,6 +183,8 @@ public class ReviewerSetupSessionService {
                 return new SetupSessionResponseData<>(HELP_MESSAGE, commandType, speech);
             case LIST:
                 return listFlashcardsCommandProcess(session, speech);
+            case RUDE:
+                return new SetupSessionResponseData<>(RUDE_MESSAGE, commandType, speech);
             case MISUNDERSTOOD:
             default:
                 return new SetupSessionResponseData<>(MISUNDERSTOOD_MESSAGE, commandType, speech);
@@ -324,6 +328,13 @@ public class ReviewerSetupSessionService {
             case "show flashcards":
             case "list flashcards":
                 return LIST;
+            case "woof":
+            case "woof!":
+            case "woof woof":
+            case "arf":
+            case "arf!":
+            case "arf arf":
+                return RUDE;
             default:
                 return MISUNDERSTOOD;
         }
