@@ -69,7 +69,7 @@ public class ReviewSessionState extends SessionState<QuizSession> {
 
     private void evaluateAnswer(FlashcardQueueItem curFlashcard) {
         String answer = curFlashcard.getFlashcard().getAnswers().get(0).getAnswer().toLowerCase();
-        curFlashcard.setSubmittedAnswer(answer);
+        curFlashcard.setSubmittedAnswer(session.getAnswer());
         if (session.getAnswer().toLowerCase().equals(answer))
             curFlashcard.setAnswerState(AnswerState.CORRECT);
         else
